@@ -1,29 +1,23 @@
 using FileSort.Core.Interfaces;
-using FileSort.Core.Options;
 using FileSort.Generator;
 using FileSort.Sorter;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.CommandLine;
+using FileSort.Core.Options;
+using FileSort.Core.Validation;
+using Microsoft.Extensions.Options;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// Configure services
-builder.Services.AddSingleton<IExternalSorter, ExternalFileSorter>();
-builder.Services.AddSingleton<ITestFileGenerator, TestFileGenerator>();
-
-// Bind configuration
-builder.Services.Configure<SortOptions>(builder.Configuration.GetSection(SortOptions.SectionName));
-builder.Services.Configure<GeneratorOptions>(builder.Configuration.GetSection(GeneratorOptions.SectionName));
+// Configure services using extension methods
+builder.Services.AddFileSortGenerator(builder.Configuration);
+builder.Services.AddFileSortSorter(builder.Configuration);
 
 var host = builder.Build();
 
-// Get services
-var sorter = host.Services.GetRequiredService<IExternalSorter>();
-var generator = host.Services.GetRequiredService<ITestFileGenerator>();
-var logger = host.Services.GetRequiredService<ILogger<Program>>();
+// Note: Services will be obtained from scope within each command handler
 
 // Set up command-line interface
 var rootCommand = new RootCommand("FileSort - High-performance external merge sort for large text files");
@@ -43,7 +37,9 @@ generateCommand.AddOption(seedOption);
 generateCommand.SetHandler(async (string? output, long? size, int? duplicates, int? seed) =>
 {
     using var scope = host.Services.CreateScope();
-    var options = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<GeneratorOptions>>().Value;
+    var options = scope.ServiceProvider.GetRequiredService<IOptionsSnapshot<GeneratorOptions>>().Value;
+    var generator = scope.ServiceProvider.GetRequiredService<ITestFileGenerator>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     if (output != null)
         options.OutputFilePath = output;
@@ -53,6 +49,9 @@ generateCommand.SetHandler(async (string? output, long? size, int? duplicates, i
         options.DuplicateRatioPercent = duplicates.Value;
     if (seed.HasValue)
         options.Seed = seed.Value;
+
+    // Validate options after command-line overrides
+    GeneratorOptionsValidator.Validate(options);
 
     logger.LogInformation("Generating test file: {OutputPath}, Target size: {Size} bytes", options.OutputFilePath, options.TargetSizeBytes);
 
@@ -91,7 +90,9 @@ sortCommand.AddOption(chunkSizeOption);
 sortCommand.SetHandler(async (string? input, string? output, int? chunkSize) =>
 {
     using var scope = host.Services.CreateScope();
-    var options = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<SortOptions>>().Value;
+    var options = scope.ServiceProvider.GetRequiredService<IOptionsSnapshot<SortOptions>>().Value;
+    var sorter = scope.ServiceProvider.GetRequiredService<IExternalSorter>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     if (input != null)
         options.InputFilePath = input;
@@ -99,6 +100,9 @@ sortCommand.SetHandler(async (string? input, string? output, int? chunkSize) =>
         options.OutputFilePath = output;
     if (chunkSize.HasValue)
         options.ChunkSizeMb = chunkSize.Value;
+
+    // Validate options after command-line overrides
+    SortOptionsValidator.Validate(options);
 
     logger.LogInformation("Sorting file: {InputPath} -> {OutputPath}", options.InputFilePath, options.OutputFilePath);
 

@@ -12,7 +12,7 @@ public sealed class TestFileGenerator : ITestFileGenerator
         IProgress<GeneratorProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        OptionsValidator.Validate(options);
+        GeneratorOptionsValidator.Validate(options);
 
         // Ensure output directory exists
         string? directory = Path.GetDirectoryName(options.OutputFilePath);

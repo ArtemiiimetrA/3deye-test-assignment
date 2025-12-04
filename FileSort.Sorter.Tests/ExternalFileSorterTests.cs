@@ -18,15 +18,20 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                ChunkSizeMb = 1,
-                MaxRamMb = 100,
-                DeleteTempFiles = true
-            };
+            var options = new SortOptions(
+                inputFilePath: inputPath,
+                outputFilePath: outputPath,
+                tempDirectory: tempDir,
+                maxRamMb: 100,
+                chunkSizeMb: 1,
+                maxDegreeOfParallelism: Environment.ProcessorCount,
+                fileChunkTemplate: "chunk_{0:0000}.tmp",
+                bufferSizeBytes: 4 * 1024 * 1024,
+                deleteTempFiles: true,
+                maxOpenFiles: 500,
+                adaptiveChunkSize: true,
+                minChunkSizeMb: 64,
+                maxChunkSizeMb: 512);
 
             await _sorter.SortAsync(options);
 
@@ -54,14 +59,20 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                ChunkSizeMb = 1,
-                MaxRamMb = 100
-            };
+            var options = new SortOptions(
+                inputFilePath: inputPath,
+                outputFilePath: outputPath,
+                tempDirectory: tempDir,
+                maxRamMb: 100,
+                chunkSizeMb: 1,
+                maxDegreeOfParallelism: Environment.ProcessorCount,
+                fileChunkTemplate: "chunk_{0:0000}.tmp",
+                bufferSizeBytes: 4 * 1024 * 1024,
+                deleteTempFiles: true,
+                maxOpenFiles: 500,
+                adaptiveChunkSize: true,
+                minChunkSizeMb: 64,
+                maxChunkSizeMb: 512);
 
             await _sorter.SortAsync(options);
 
@@ -92,14 +103,20 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                ChunkSizeMb = 1,
-                MaxRamMb = 100
-            };
+            var options = new SortOptions(
+                inputFilePath: inputPath,
+                outputFilePath: outputPath,
+                tempDirectory: tempDir,
+                maxRamMb: 100,
+                chunkSizeMb: 1,
+                maxDegreeOfParallelism: Environment.ProcessorCount,
+                fileChunkTemplate: "chunk_{0:0000}.tmp",
+                bufferSizeBytes: 4 * 1024 * 1024,
+                deleteTempFiles: true,
+                maxOpenFiles: 500,
+                adaptiveChunkSize: true,
+                minChunkSizeMb: 64,
+                maxChunkSizeMb: 512);
 
             await _sorter.SortAsync(options);
 
@@ -122,14 +139,20 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                ChunkSizeMb = 1,
-                MaxRamMb = 100
-            };
+            var options = new SortOptions(
+                inputFilePath: inputPath,
+                outputFilePath: outputPath,
+                tempDirectory: tempDir,
+                maxRamMb: 100,
+                chunkSizeMb: 1,
+                maxDegreeOfParallelism: Environment.ProcessorCount,
+                fileChunkTemplate: "chunk_{0:0000}.tmp",
+                bufferSizeBytes: 4 * 1024 * 1024,
+                deleteTempFiles: true,
+                maxOpenFiles: 500,
+                adaptiveChunkSize: true,
+                minChunkSizeMb: 64,
+                maxChunkSizeMb: 512);
 
             await _sorter.SortAsync(options);
 
@@ -162,15 +185,20 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                ChunkSizeMb = 1, // Small chunk size to force multiple chunks
-                MaxRamMb = 100,
-                MaxOpenFiles = 10 // Small to test multi-pass merge
-            };
+            var options = new SortOptions(
+                inputFilePath: inputPath,
+                outputFilePath: outputPath,
+                tempDirectory: tempDir,
+                maxRamMb: 100,
+                chunkSizeMb: 1, // Small chunk size to force multiple chunks
+                maxDegreeOfParallelism: Environment.ProcessorCount,
+                fileChunkTemplate: "chunk_{0:0000}.tmp",
+                bufferSizeBytes: 4 * 1024 * 1024,
+                deleteTempFiles: true,
+                maxOpenFiles: 10, // Small to test multi-pass merge
+                adaptiveChunkSize: true,
+                minChunkSizeMb: 64,
+                maxChunkSizeMb: 512);
 
             await _sorter.SortAsync(options);
 
@@ -204,14 +232,20 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                ChunkSizeMb = 1,
-                MaxRamMb = 100
-            };
+            var options = new SortOptions(
+                inputFilePath: inputPath,
+                outputFilePath: outputPath,
+                tempDirectory: tempDir,
+                maxRamMb: 100,
+                chunkSizeMb: 1,
+                maxDegreeOfParallelism: Environment.ProcessorCount,
+                fileChunkTemplate: "chunk_{0:0000}.tmp",
+                bufferSizeBytes: 4 * 1024 * 1024,
+                deleteTempFiles: true,
+                maxOpenFiles: 500,
+                adaptiveChunkSize: true,
+                minChunkSizeMb: 64,
+                maxChunkSizeMb: 512);
 
             await _sorter.SortAsync(options);
 

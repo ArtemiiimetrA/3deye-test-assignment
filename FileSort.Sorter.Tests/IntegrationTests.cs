@@ -19,30 +19,34 @@ public class IntegrationTests
         {
             // Step 1: Generate test file
             var generator = new TestFileGenerator();
-            var genOptions = new GeneratorOptions
-            {
-                OutputFilePath = inputPath,
-                TargetSizeBytes = 100 * 1024, // 100KB
-                MinNumber = 1,
-                MaxNumber = 1000,
-                DuplicateRatioPercent = 30,
-                Seed = 42
-            };
+            var genOptions = new GeneratorOptions(
+                outputFilePath: inputPath,
+                targetSizeBytes: 100 * 1024, // 100KB
+                minNumber: 1,
+                maxNumber: 1000,
+                duplicateRatioPercent: 30,
+                bufferSizeBytes: 4 * 1024 * 1024,
+                seed: 42);
 
             await generator.GenerateAsync(genOptions);
             Assert.True(File.Exists(inputPath));
 
             // Step 2: Sort the file
             var sorter = new ExternalFileSorter();
-            var sortOptions = new SortOptions
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                ChunkSizeMb = 1,
-                MaxRamMb = 100,
-                DeleteTempFiles = true
-            };
+            var sortOptions = new SortOptions(
+                inputFilePath: inputPath,
+                outputFilePath: outputPath,
+                tempDirectory: tempDir,
+                maxRamMb: 100,
+                chunkSizeMb: 1,
+                maxDegreeOfParallelism: Environment.ProcessorCount,
+                fileChunkTemplate: "chunk_{0:0000}.tmp",
+                bufferSizeBytes: 4 * 1024 * 1024,
+                deleteTempFiles: true,
+                maxOpenFiles: 500,
+                adaptiveChunkSize: true,
+                minChunkSizeMb: 64,
+                maxChunkSizeMb: 512);
 
             await sorter.SortAsync(sortOptions);
             Assert.True(File.Exists(outputPath));

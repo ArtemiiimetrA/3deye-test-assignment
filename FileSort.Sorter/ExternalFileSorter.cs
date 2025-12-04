@@ -19,7 +19,7 @@ public sealed class ExternalFileSorter : IExternalSorter
         IProgress<SortProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        OptionsValidator.Validate(options);
+        SortOptionsValidator.Validate(options);
 
         // Ensure temp directory exists
         Directory.CreateDirectory(options.TempDirectory);
