@@ -1,18 +1,16 @@
-using FileSort.Core.Validation;
-
-namespace FileSort.Core.Options;
+namespace FileSort.Generator.Options;
 
 public sealed class GeneratorOptions
 {
     public const string SectionName = "GeneratorOptions";
     
-    public string? OutputFilePath { get; set; }
-    public long TargetSizeBytes { get; set; }
-    public int MinNumber { get; set; }
-    public int MaxNumber { get; set; }
-    public int DuplicateRatioPercent { get; set; }
-    public int BufferSizeBytes { get; set; }
-    public int Seed { get; set; }
+    public string? OutputFilePath { get; init; }
+    public long TargetSizeBytes { get; init; }
+    public int MinNumber { get; init; }
+    public int MaxNumber { get; init; }
+    public int DuplicateRatioPercent { get; init; }
+    public int BufferSizeBytes { get; init; }
+    public int? Seed { get; init; }
 
     public GeneratorOptions() { }
 
@@ -23,7 +21,7 @@ public sealed class GeneratorOptions
         int maxNumber,
         int duplicateRatioPercent,
         int bufferSizeBytes,
-        int seed)
+        int? seed)
     {
         OutputFilePath = outputFilePath;
         TargetSizeBytes = targetSizeBytes;

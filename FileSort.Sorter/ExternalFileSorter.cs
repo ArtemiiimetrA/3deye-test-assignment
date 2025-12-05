@@ -1,9 +1,8 @@
 using FileSort.Core.Comparison;
 using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
-using FileSort.Core.Options;
 using FileSort.Core.Parsing;
-using FileSort.Core.Validation;
+using FileSort.Core.Requests;
 
 namespace FileSort.Sorter;
 
@@ -15,32 +14,32 @@ namespace FileSort.Sorter;
 public sealed class ExternalFileSorter : IExternalSorter
 {
     public async Task SortAsync(
-        SortOptions options,
+        SortRequest request,
         IProgress<SortProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        SortOptionsValidator.Validate(options);
+        ValidateRequest(request);
 
         // Ensure temp directory exists
-        Directory.CreateDirectory(options.TempDirectory);
+        Directory.CreateDirectory(request.TempDirectory);
 
         // Get input file size for progress tracking
-        var inputFileInfo = new FileInfo(options.InputFilePath);
+        var inputFileInfo = new FileInfo(request.InputFilePath);
         long totalBytes = inputFileInfo.Length;
 
         // Phase 1: Create sorted chunks
-        List<string> chunkFiles = await CreateChunksAsync(options, totalBytes, progress, cancellationToken);
+        List<string> chunkFiles = await CreateChunksAsync(request, totalBytes, progress, cancellationToken);
 
         try
         {
             // Phase 2: Merge chunks
-            var mergeProcessor = new MergeProcessor(options.MaxOpenFiles, options.BufferSizeBytes);
-            await mergeProcessor.MergeChunksAsync(chunkFiles, options.OutputFilePath, progress, cancellationToken);
+            var mergeProcessor = new MergeProcessor(request.MaxOpenFiles, request.BufferSizeBytes);
+            await mergeProcessor.MergeChunksAsync(chunkFiles, request.OutputFilePath, progress, cancellationToken);
         }
         finally
         {
             // Cleanup: Delete temporary chunk files
-            if (options.DeleteTempFiles)
+            if (request.DeleteTempFiles)
             {
                 foreach (string chunkFile in chunkFiles)
                 {
@@ -59,7 +58,7 @@ public sealed class ExternalFileSorter : IExternalSorter
     }
 
     private async Task<List<string>> CreateChunksAsync(
-        SortOptions options,
+        SortRequest request,
         long totalBytes,
         IProgress<SortProgress>? progress,
         CancellationToken cancellationToken)
@@ -67,19 +66,19 @@ public sealed class ExternalFileSorter : IExternalSorter
         var chunkFiles = new List<string>();
         var chunkProcessor = new ChunkProcessor();
 
-        long chunkSizeBytes = (long)options.ChunkSizeMb * 1024 * 1024;
+        long chunkSizeBytes = (long)request.ChunkSizeMb * 1024 * 1024;
         long bytesRead = 0;
         int chunkIndex = 0;
 
         await using var fileStream = new FileStream(
-            options.InputFilePath,
+            request.InputFilePath,
             FileMode.Open,
             FileAccess.Read,
             FileShare.Read,
-            options.BufferSizeBytes,
+            request.BufferSizeBytes,
             FileOptions.SequentialScan | FileOptions.Asynchronous);
 
-        using var reader = new StreamReader(fileStream, System.Text.Encoding.UTF8, bufferSize: options.BufferSizeBytes);
+        using var reader = new StreamReader(fileStream, System.Text.Encoding.UTF8, bufferSize: request.BufferSizeBytes);
 
         var records = new List<Record>();
         long currentChunkBytes = 0;
@@ -87,7 +86,7 @@ public sealed class ExternalFileSorter : IExternalSorter
         int recordCount = 0;
 
         // Semaphore to limit concurrent chunk processing
-        var semaphore = new SemaphoreSlim(options.MaxDegreeOfParallelism);
+        var semaphore = new SemaphoreSlim(request.MaxDegreeOfParallelism);
         var chunkTasks = new List<Task<string>>();
 
         string? line;
@@ -111,17 +110,17 @@ public sealed class ExternalFileSorter : IExternalSorter
             // Check if we should create a chunk
             bool shouldCreateChunk = false;
 
-            if (options.AdaptiveChunkSize)
+            if (request.AdaptiveChunkSize)
             {
                 // Adaptive: Check memory pressure and adjust
-                long minChunkBytes = (long)options.MinChunkSizeMb * 1024 * 1024;
-                long maxChunkBytes = (long)options.MaxChunkSizeMb * 1024 * 1024;
+                long minChunkBytes = (long)request.MinChunkSizeMb * 1024 * 1024;
+                long maxChunkBytes = (long)request.MaxChunkSizeMb * 1024 * 1024;
 
                 if (currentChunkBytes >= minChunkBytes)
                 {
                     // Check if we're approaching memory limit or have enough data
                     long estimatedMemory = EstimateMemoryUsage(records.Count, estimatedRecordSize);
-                    long maxMemoryBytes = (long)options.MaxRamMb * 1024 * 1024;
+                    long maxMemoryBytes = (long)request.MaxRamMb * 1024 * 1024;
 
                     if (estimatedMemory >= maxMemoryBytes * 0.8 || currentChunkBytes >= maxChunkBytes)
                     {
@@ -151,10 +150,10 @@ public sealed class ExternalFileSorter : IExternalSorter
                     semaphore,
                     chunkProcessor,
                     recordsCopy,
-                    options.TempDirectory,
-                    options.FileChunkTemplate,
+                    request.TempDirectory,
+                    request.FileChunkTemplate,
                     currentChunkIndex,
-                    options.BufferSizeBytes,
+                    request.BufferSizeBytes,
                     cancellationToken);
 
                 chunkTasks.Add(task);
@@ -180,10 +179,10 @@ public sealed class ExternalFileSorter : IExternalSorter
                 semaphore,
                 chunkProcessor,
                 records,
-                options.TempDirectory,
-                options.FileChunkTemplate,
+                request.TempDirectory,
+                request.FileChunkTemplate,
                 currentChunkIndex,
-                options.BufferSizeBytes,
+                request.BufferSizeBytes,
                 cancellationToken);
 
             chunkTasks.Add(task);
@@ -236,5 +235,41 @@ public sealed class ExternalFileSorter : IExternalSorter
         // Overhead includes: Record struct, string references, list overhead
         const long overheadPerRecord = 50; // bytes
         return recordCount * (averageRecordSize + overheadPerRecord);
+    }
+
+    private static void ValidateRequest(SortRequest request)
+    {
+        if (request == null)
+            throw new ArgumentNullException(nameof(request));
+
+        if (string.IsNullOrWhiteSpace(request.InputFilePath))
+            throw new ArgumentException("InputFilePath is required.", nameof(request));
+
+        if (!File.Exists(request.InputFilePath))
+            throw new FileNotFoundException($"Input file not found: {request.InputFilePath}");
+
+        if (string.IsNullOrWhiteSpace(request.OutputFilePath))
+            throw new ArgumentException("OutputFilePath is required.", nameof(request));
+
+        if (request.ChunkSizeMb <= 0)
+            throw new ArgumentException("ChunkSizeMb must be greater than 0.", nameof(request));
+
+        if (request.ChunkSizeMb > request.MaxRamMb)
+            throw new ArgumentException("ChunkSizeMb cannot exceed MaxRamMb.", nameof(request));
+
+        if (request.MaxRamMb <= 0)
+            throw new ArgumentException("MaxRamMb must be greater than 0.", nameof(request));
+
+        if (request.MaxDegreeOfParallelism <= 0)
+            throw new ArgumentException("MaxDegreeOfParallelism must be greater than 0.", nameof(request));
+
+        if (request.BufferSizeBytes <= 0)
+            throw new ArgumentException("BufferSizeBytes must be greater than 0.", nameof(request));
+
+        if (request.MaxOpenFiles < 2)
+            throw new ArgumentException("MaxOpenFiles must be at least 2.", nameof(request));
+
+        if (request.MinChunkSizeMb > request.MaxChunkSizeMb)
+            throw new ArgumentException("MinChunkSizeMb cannot exceed MaxChunkSizeMb.", nameof(request));
     }
 }

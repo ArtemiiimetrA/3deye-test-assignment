@@ -26,7 +26,7 @@ public static class RecordParser
         // Find the period separator
         int periodIndex = span.IndexOf('.');
         if (periodIndex <= 0 || periodIndex >= span.Length - 1)
-            return false; // No period or period at start/end
+            return false;
 
         // Parse number (before period)
         ReadOnlySpan<char> numberSpan = span[..periodIndex].Trim();

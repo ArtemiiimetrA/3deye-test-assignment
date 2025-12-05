@@ -1,5 +1,6 @@
 using FileSort.Core.Interfaces;
-using FileSort.Core.Options;
+using FileSort.Core.Models;
+using FileSort.Core.Requests;
 using FileSort.Sorter;
 using Xunit;
 
@@ -18,22 +19,24 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions(
-                inputFilePath: inputPath,
-                outputFilePath: outputPath,
-                tempDirectory: tempDir,
-                maxRamMb: 100,
-                chunkSizeMb: 1,
-                maxDegreeOfParallelism: Environment.ProcessorCount,
-                fileChunkTemplate: "chunk_{0:0000}.tmp",
-                bufferSizeBytes: 4 * 1024 * 1024,
-                deleteTempFiles: true,
-                maxOpenFiles: 500,
-                adaptiveChunkSize: true,
-                minChunkSizeMb: 64,
-                maxChunkSizeMb: 512);
+            var request = new SortRequest
+            {
+                InputFilePath = inputPath,
+                OutputFilePath = outputPath,
+                TempDirectory = tempDir,
+                MaxRamMb = 100,
+                ChunkSizeMb = 1,
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                FileChunkTemplate = "chunk_{0:0000}.tmp",
+                BufferSizeBytes = 4 * 1024 * 1024,
+                DeleteTempFiles = true,
+                MaxOpenFiles = 500,
+                AdaptiveChunkSize = true,
+                MinChunkSizeMb = 64,
+                MaxChunkSizeMb = 512
+            };
 
-            await _sorter.SortAsync(options);
+            await _sorter.SortAsync(request);
 
             Assert.True(File.Exists(outputPath));
             string[] lines = await File.ReadAllLinesAsync(outputPath);
@@ -59,22 +62,24 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions(
-                inputFilePath: inputPath,
-                outputFilePath: outputPath,
-                tempDirectory: tempDir,
-                maxRamMb: 100,
-                chunkSizeMb: 1,
-                maxDegreeOfParallelism: Environment.ProcessorCount,
-                fileChunkTemplate: "chunk_{0:0000}.tmp",
-                bufferSizeBytes: 4 * 1024 * 1024,
-                deleteTempFiles: true,
-                maxOpenFiles: 500,
-                adaptiveChunkSize: true,
-                minChunkSizeMb: 64,
-                maxChunkSizeMb: 512);
+            var request = new SortRequest
+            {
+                InputFilePath = inputPath,
+                OutputFilePath = outputPath,
+                TempDirectory = tempDir,
+                MaxRamMb = 100,
+                ChunkSizeMb = 1,
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                FileChunkTemplate = "chunk_{0:0000}.tmp",
+                BufferSizeBytes = 4 * 1024 * 1024,
+                DeleteTempFiles = true,
+                MaxOpenFiles = 500,
+                AdaptiveChunkSize = true,
+                MinChunkSizeMb = 64,
+                MaxChunkSizeMb = 512
+            };
 
-            await _sorter.SortAsync(options);
+            await _sorter.SortAsync(request);
 
             string[] lines = await File.ReadAllLinesAsync(outputPath);
             Assert.Equal(2, lines.Length);
@@ -103,22 +108,24 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions(
-                inputFilePath: inputPath,
-                outputFilePath: outputPath,
-                tempDirectory: tempDir,
-                maxRamMb: 100,
-                chunkSizeMb: 1,
-                maxDegreeOfParallelism: Environment.ProcessorCount,
-                fileChunkTemplate: "chunk_{0:0000}.tmp",
-                bufferSizeBytes: 4 * 1024 * 1024,
-                deleteTempFiles: true,
-                maxOpenFiles: 500,
-                adaptiveChunkSize: true,
-                minChunkSizeMb: 64,
-                maxChunkSizeMb: 512);
+            var request = new SortRequest
+            {
+                InputFilePath = inputPath,
+                OutputFilePath = outputPath,
+                TempDirectory = tempDir,
+                MaxRamMb = 100,
+                ChunkSizeMb = 1,
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                FileChunkTemplate = "chunk_{0:0000}.tmp",
+                BufferSizeBytes = 4 * 1024 * 1024,
+                DeleteTempFiles = true,
+                MaxOpenFiles = 500,
+                AdaptiveChunkSize = true,
+                MinChunkSizeMb = 64,
+                MaxChunkSizeMb = 512
+            };
 
-            await _sorter.SortAsync(options);
+            await _sorter.SortAsync(request);
 
             var records = await TestHelpers.ReadRecordsFromFileAsync(outputPath);
             Assert.True(TestHelpers.IsSorted(records));
@@ -139,22 +146,24 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions(
-                inputFilePath: inputPath,
-                outputFilePath: outputPath,
-                tempDirectory: tempDir,
-                maxRamMb: 100,
-                chunkSizeMb: 1,
-                maxDegreeOfParallelism: Environment.ProcessorCount,
-                fileChunkTemplate: "chunk_{0:0000}.tmp",
-                bufferSizeBytes: 4 * 1024 * 1024,
-                deleteTempFiles: true,
-                maxOpenFiles: 500,
-                adaptiveChunkSize: true,
-                minChunkSizeMb: 64,
-                maxChunkSizeMb: 512);
+            var request = new SortRequest
+            {
+                InputFilePath = inputPath,
+                OutputFilePath = outputPath,
+                TempDirectory = tempDir,
+                MaxRamMb = 100,
+                ChunkSizeMb = 1,
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                FileChunkTemplate = "chunk_{0:0000}.tmp",
+                BufferSizeBytes = 4 * 1024 * 1024,
+                DeleteTempFiles = true,
+                MaxOpenFiles = 500,
+                AdaptiveChunkSize = true,
+                MinChunkSizeMb = 64,
+                MaxChunkSizeMb = 512
+            };
 
-            await _sorter.SortAsync(options);
+            await _sorter.SortAsync(request);
 
             Assert.True(File.Exists(outputPath));
             string[] lines = await File.ReadAllLinesAsync(outputPath);
@@ -185,22 +194,24 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions(
-                inputFilePath: inputPath,
-                outputFilePath: outputPath,
-                tempDirectory: tempDir,
-                maxRamMb: 100,
-                chunkSizeMb: 1, // Small chunk size to force multiple chunks
-                maxDegreeOfParallelism: Environment.ProcessorCount,
-                fileChunkTemplate: "chunk_{0:0000}.tmp",
-                bufferSizeBytes: 4 * 1024 * 1024,
-                deleteTempFiles: true,
-                maxOpenFiles: 10, // Small to test multi-pass merge
-                adaptiveChunkSize: true,
-                minChunkSizeMb: 64,
-                maxChunkSizeMb: 512);
+            var request = new SortRequest
+            {
+                InputFilePath = inputPath,
+                OutputFilePath = outputPath,
+                TempDirectory = tempDir,
+                MaxRamMb = 100,
+                ChunkSizeMb = 1, // Small chunk size to force multiple chunks
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                FileChunkTemplate = "chunk_{0:0000}.tmp",
+                BufferSizeBytes = 4 * 1024 * 1024,
+                DeleteTempFiles = true,
+                MaxOpenFiles = 10, // Small to test multi-pass merge
+                AdaptiveChunkSize = true,
+                MinChunkSizeMb = 64,
+                MaxChunkSizeMb = 512
+            };
 
-            await _sorter.SortAsync(options);
+            await _sorter.SortAsync(request);
 
             var records = await TestHelpers.ReadRecordsFromFileAsync(outputPath);
             Assert.True(TestHelpers.IsSorted(records));
@@ -232,22 +243,24 @@ public class ExternalFileSorterTests
 
         try
         {
-            var options = new SortOptions(
-                inputFilePath: inputPath,
-                outputFilePath: outputPath,
-                tempDirectory: tempDir,
-                maxRamMb: 100,
-                chunkSizeMb: 1,
-                maxDegreeOfParallelism: Environment.ProcessorCount,
-                fileChunkTemplate: "chunk_{0:0000}.tmp",
-                bufferSizeBytes: 4 * 1024 * 1024,
-                deleteTempFiles: true,
-                maxOpenFiles: 500,
-                adaptiveChunkSize: true,
-                minChunkSizeMb: 64,
-                maxChunkSizeMb: 512);
+            var request = new SortRequest
+            {
+                InputFilePath = inputPath,
+                OutputFilePath = outputPath,
+                TempDirectory = tempDir,
+                MaxRamMb = 100,
+                ChunkSizeMb = 1,
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                FileChunkTemplate = "chunk_{0:0000}.tmp",
+                BufferSizeBytes = 4 * 1024 * 1024,
+                DeleteTempFiles = true,
+                MaxOpenFiles = 500,
+                AdaptiveChunkSize = true,
+                MinChunkSizeMb = 64,
+                MaxChunkSizeMb = 512
+            };
 
-            await _sorter.SortAsync(options);
+            await _sorter.SortAsync(request);
 
             var inputRecords = await TestHelpers.ReadRecordsFromFileAsync(inputPath);
             var outputRecords = await TestHelpers.ReadRecordsFromFileAsync(outputPath);

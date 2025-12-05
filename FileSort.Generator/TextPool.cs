@@ -16,10 +16,10 @@ internal sealed class TextPool
         "Guava", "Lychee", "Passionfruit", "Pineapple", "Plum", "Pomegranate"
     };
 
-    public TextPool(int duplicateRatioPercent, int seed = 0)
+    public TextPool(int duplicateRatioPercent, int? seed = null)
     {
         _duplicateRatioPercent = duplicateRatioPercent;
-        _random = seed == 0 ? new Random() : new Random(seed);
+        _random = seed.HasValue ? new Random(seed.Value) : new Random();
         _baseStrings = new List<string>();
 
         // Initialize with some base strings

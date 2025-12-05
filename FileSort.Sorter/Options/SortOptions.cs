@@ -1,6 +1,4 @@
-using FileSort.Core.Validation;
-
-namespace FileSort.Core.Options;
+namespace FileSort.Sorter.Options;
 
 public sealed class SortOptions
 {

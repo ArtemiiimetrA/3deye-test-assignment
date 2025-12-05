@@ -1,5 +1,5 @@
-using FileSort.Core.Interfaces;
-using FileSort.Core.Options;
+using FileSort.Core.Models;
+using FileSort.Core.Requests;
 using FileSort.Generator;
 using FileSort.Sorter;
 using Xunit;
@@ -19,36 +19,40 @@ public class IntegrationTests
         {
             // Step 1: Generate test file
             var generator = new TestFileGenerator();
-            var genOptions = new GeneratorOptions(
-                outputFilePath: inputPath,
-                targetSizeBytes: 100 * 1024, // 100KB
-                minNumber: 1,
-                maxNumber: 1000,
-                duplicateRatioPercent: 30,
-                bufferSizeBytes: 4 * 1024 * 1024,
-                seed: 42);
+            var genRequest = new GeneratorRequest
+            {
+                OutputFilePath = inputPath,
+                TargetSizeBytes = 100 * 1024, // 100KB
+                MinNumber = 1,
+                MaxNumber = 1000,
+                DuplicateRatioPercent = 30,
+                BufferSizeBytes = 4 * 1024 * 1024,
+                Seed = 42
+            };
 
-            await generator.GenerateAsync(genOptions);
+            await generator.GenerateAsync(genRequest);
             Assert.True(File.Exists(inputPath));
 
             // Step 2: Sort the file
             var sorter = new ExternalFileSorter();
-            var sortOptions = new SortOptions(
-                inputFilePath: inputPath,
-                outputFilePath: outputPath,
-                tempDirectory: tempDir,
-                maxRamMb: 100,
-                chunkSizeMb: 1,
-                maxDegreeOfParallelism: Environment.ProcessorCount,
-                fileChunkTemplate: "chunk_{0:0000}.tmp",
-                bufferSizeBytes: 4 * 1024 * 1024,
-                deleteTempFiles: true,
-                maxOpenFiles: 500,
-                adaptiveChunkSize: true,
-                minChunkSizeMb: 64,
-                maxChunkSizeMb: 512);
+            var sortRequest = new SortRequest
+            {
+                InputFilePath = inputPath,
+                OutputFilePath = outputPath,
+                TempDirectory = tempDir,
+                MaxRamMb = 100,
+                ChunkSizeMb = 1,
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                FileChunkTemplate = "chunk_{0:0000}.tmp",
+                BufferSizeBytes = 4 * 1024 * 1024,
+                DeleteTempFiles = true,
+                MaxOpenFiles = 500,
+                AdaptiveChunkSize = true,
+                MinChunkSizeMb = 64,
+                MaxChunkSizeMb = 512
+            };
 
-            await sorter.SortAsync(sortOptions);
+            await sorter.SortAsync(sortRequest);
             Assert.True(File.Exists(outputPath));
 
             // Step 3: Verify output is sorted

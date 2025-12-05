@@ -1,6 +1,5 @@
 using FileSort.Core.Interfaces;
-using FileSort.Core.Options;
-using FileSort.Core.Validation;
+using FileSort.Sorter.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,15 +11,10 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Bind configuration (validation happens on access, not on start)
         services
             .AddOptions<SortOptions>()
             .Bind(configuration.GetSection(SortOptions.SectionName));
 
-        // Register validator
-        services.AddSingleton<SortOptionsValidator>();
-
-        // Register services
         services.AddSingleton<IExternalSorter, ExternalFileSorter>();
 
         return services;
