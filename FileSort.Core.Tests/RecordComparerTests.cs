@@ -66,4 +66,106 @@ public class RecordComparerTests
 
         Assert.True(result < 0); // Empty < "A"
     }
+
+    [Fact]
+    public void Compare_UnicodeCharacters_HandlesCorrectly()
+    {
+        var record1 = new Record(1, "Äpple");
+        var record2 = new Record(1, "Banana");
+
+        int result = _comparer.Compare(record1, record2);
+
+        Assert.NotEqual(0, result);
+    }
+
+    [Fact]
+    public void Compare_SpecialCharacters_HandlesCorrectly()
+    {
+        var record1 = new Record(1, "File.name");
+        var record2 = new Record(1, "File-name");
+
+        int result = _comparer.Compare(record1, record2);
+
+        Assert.NotEqual(0, result);
+    }
+
+    [Fact]
+    public void Compare_VeryLongText_HandlesCorrectly()
+    {
+        string longText1 = new string('A', 10000);
+        string longText2 = new string('B', 10000);
+        var record1 = new Record(1, longText1);
+        var record2 = new Record(1, longText2);
+
+        int result = _comparer.Compare(record1, record2);
+
+        Assert.True(result < 0);
+    }
+
+    [Fact]
+    public void Compare_LargeNumbers_HandlesCorrectly()
+    {
+        var record1 = new Record(int.MaxValue - 1, "Test");
+        var record2 = new Record(int.MaxValue, "Test");
+
+        int result = _comparer.Compare(record1, record2);
+
+        Assert.True(result < 0);
+    }
+
+    [Fact]
+    public void Compare_ZeroNumbers_HandlesCorrectly()
+    {
+        var record1 = new Record(0, "Test");
+        var record2 = new Record(1, "Test");
+
+        int result = _comparer.Compare(record1, record2);
+
+        Assert.True(result < 0);
+    }
+
+    [Fact]
+    public void Compare_WhitespaceOnlyText_HandlesCorrectly()
+    {
+        var record1 = new Record(1, "   ");
+        var record2 = new Record(1, "A");
+
+        int result = _comparer.Compare(record1, record2);
+
+        Assert.NotEqual(0, result);
+    }
+
+    [Fact]
+    public void Compare_TextWithLeadingTrailingSpaces_HandlesCorrectly()
+    {
+        var record1 = new Record(1, " Apple");
+        var record2 = new Record(1, "Apple");
+
+        int result = _comparer.Compare(record1, record2);
+
+        Assert.NotEqual(0, result); // Space before "Apple" is different
+    }
+
+    [Fact]
+    public void Compare_MultipleIdenticalTexts_OrdersByNumber()
+    {
+        var record1 = new Record(1, "Apple");
+        var record2 = new Record(2, "Apple");
+        var record3 = new Record(3, "Apple");
+
+        Assert.True(_comparer.Compare(record1, record2) < 0);
+        Assert.True(_comparer.Compare(record2, record3) < 0);
+        Assert.True(_comparer.Compare(record1, record3) < 0);
+    }
+
+    [Fact]
+    public void Compare_TextComparisonWithNumbers_HandlesCorrectly()
+    {
+        var record1 = new Record(1, "1Text");
+        var record2 = new Record(2, "2Text");
+
+        int result = _comparer.Compare(record1, record2);
+
+        Assert.True(result < 0); // "1Text" < "2Text" lexicographically
+    }
 }

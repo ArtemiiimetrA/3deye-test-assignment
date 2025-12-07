@@ -21,6 +21,7 @@ public sealed class ExternalFileSorter : IExternalSorter
         IProgress<SortProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         SortRequestValidator.Validate(request);
         FileIoHelpers.EnsureDirectoryExists(request.TempDirectory);
 

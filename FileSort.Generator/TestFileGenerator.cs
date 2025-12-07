@@ -2,7 +2,6 @@ using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
 using FileSort.Core.Requests;
 using System.Text;
-using FileSort.Generator.Validation;
 
 namespace FileSort.Generator;
 
@@ -12,7 +11,6 @@ public sealed class TestFileGenerator : ITestFileGenerator
     private const int WriteBufferCapacity = 10000;
     private const double TargetSizeTolerance = 0.99;
     private static readonly Encoding FileEncoding = Encoding.UTF8;
-    private static readonly int LineEndingBytes = FileEncoding.GetByteCount(Environment.NewLine);
 
     // <inheritdoc />
     public async Task GenerateAsync(
@@ -20,7 +18,8 @@ public sealed class TestFileGenerator : ITestFileGenerator
         IProgress<GeneratorProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        GeneratorRequestValidator.Validate(request);
+        cancellationToken.ThrowIfCancellationRequested();
+        ValidateRequest(request);
         EnsureOutputDirectoryExists(request.OutputFilePath);
 
         var textPool = CreateTextPool(request);
@@ -50,7 +49,39 @@ public sealed class TestFileGenerator : ITestFileGenerator
             linesWritten,
             cancellationToken);
 
-        await writer.FlushAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            await writer.FlushAsync(cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+        }
+    }
+
+    private static void ValidateRequest(GeneratorRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        if (string.IsNullOrWhiteSpace(request.OutputFilePath))
+            throw new ArgumentException("OutputFilePath is required.", nameof(request));
+
+        if (request.TargetSizeBytes <= 0)
+            throw new ArgumentException("TargetSizeBytes must be greater than 0.", nameof(request));
+
+        if (request.MinNumber < 0)
+            throw new ArgumentException("MinNumber must be non-negative.", nameof(request));
+
+        if (request.MaxNumber < request.MinNumber)
+            throw new ArgumentException("MaxNumber must be greater than or equal to MinNumber.", nameof(request));
+
+        if (request.DuplicateRatioPercent < 0 || request.DuplicateRatioPercent > 100)
+            throw new ArgumentException("DuplicateRatioPercent must be between 0 and 100.", nameof(request));
+
+        if (request.BufferSizeBytes <= 0)
+            throw new ArgumentException("BufferSizeBytes must be greater than 0.", nameof(request));
     }
 
     private static void EnsureOutputDirectoryExists(string filePath)
@@ -97,7 +128,7 @@ public sealed class TestFileGenerator : ITestFileGenerator
 
     private static long CalculateLineBytes(string line)
     {
-        return FileEncoding.GetByteCount(line) + LineEndingBytes;
+        return FileEncoding.GetByteCount(line) + FileEncoding.GetByteCount(Environment.NewLine);
     }
 
     private static bool ShouldFlushBuffer(
@@ -162,7 +193,15 @@ public sealed class TestFileGenerator : ITestFileGenerator
         foreach (string line in writeBuffer)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await writer.WriteLineAsync(line);
+            try
+            {
+                await writer.WriteLineAsync(line);
+            }
+            catch (TaskCanceledException)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+            }
             
             long lineBytes = CalculateLineBytes(line);
             bytesWritten += lineBytes;

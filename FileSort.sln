@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSort.Progress", "FileSo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSort.Validator", "FileSort.Validator\FileSort.Validator.csproj", "{DB20691E-D9FE-4517-AFFB-E8F7391F7C6A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSort.Validator.Tests", "FileSort.Validator.Tests\FileSort.Validator.Tests.csproj", "{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -138,6 +140,18 @@ Global
 		{DB20691E-D9FE-4517-AFFB-E8F7391F7C6A}.Release|x64.Build.0 = Release|Any CPU
 		{DB20691E-D9FE-4517-AFFB-E8F7391F7C6A}.Release|x86.ActiveCfg = Release|Any CPU
 		{DB20691E-D9FE-4517-AFFB-E8F7391F7C6A}.Release|x86.Build.0 = Release|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Debug|x64.Build.0 = Debug|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Debug|x86.Build.0 = Debug|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Release|x64.ActiveCfg = Release|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Release|x64.Build.0 = Release|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Release|x86.ActiveCfg = Release|Any CPU
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -146,5 +160,6 @@ Global
 		{1176286B-DAE9-407D-A981-BA2565E9F837} = {96274BCF-CD02-4DE5-88ED-DF73F3977881}
 		{666E806E-BD08-41BB-8AF3-2C9705163F96} = {96274BCF-CD02-4DE5-88ED-DF73F3977881}
 		{9C0D921D-0D5F-454D-8F22-D8957E8AD8CF} = {96274BCF-CD02-4DE5-88ED-DF73F3977881}
+		{994B9D79-8D71-4ABD-8332-67B63C1FE3F9} = {96274BCF-CD02-4DE5-88ED-DF73F3977881}
 	EndGlobalSection
 EndGlobal

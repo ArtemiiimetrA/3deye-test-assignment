@@ -68,8 +68,21 @@ internal sealed class ChunkCreationCoordinator : IDisposable
     private async Task ProcessInputLinesAsync(StreamReader reader, CancellationToken cancellationToken)
     {
         string? line;
-        while ((line = await reader.ReadLineAsync(cancellationToken)) != null)
+        while (true)
         {
+            try
+            {
+                line = await reader.ReadLineAsync(cancellationToken);
+            }
+            catch (TaskCanceledException)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+            }
+            
+            if (line == null)
+                break;
+
             if (RecordParser.TryParse(line, out Record record))
             {
                 ProcessRecord(line, record);
@@ -162,7 +175,16 @@ internal sealed class ChunkCreationCoordinator : IDisposable
         int chunkIndex,
         CancellationToken cancellationToken)
     {
-        await _semaphore.WaitAsync(cancellationToken);
+        try
+        {
+            await _semaphore.WaitAsync(cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+        }
+        
         try
         {
             return await _chunkProcessor.ProcessChunkAsync(

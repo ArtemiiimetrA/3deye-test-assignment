@@ -69,7 +69,17 @@ internal sealed class SinglePassMerger : IMergeStrategy
         PriorityQueue<RecordWithSource, RecordKey> priorityQueue,
         CancellationToken cancellationToken)
     {
-        string? line = await reader.ReadLineAsync(cancellationToken);
+        string? line;
+        try
+        {
+            line = await reader.ReadLineAsync(cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+        }
+        
         if (line != null && RecordParser.TryParse(line, out Record record))
         {
             var key = new RecordKey(record.Text, record.Number);
@@ -106,7 +116,17 @@ internal sealed class SinglePassMerger : IMergeStrategy
         }
 
         await WriteBufferHelpers.FlushRemainingLinesAsync(writeBuffer, writer);
-        await writer.FlushAsync(cancellationToken);
+        
+        cancellationToken.ThrowIfCancellationRequested();
+        try
+        {
+            await writer.FlushAsync(cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+        }
     }
 
     private static async Task TryReadNextRecordAsync(
@@ -121,7 +141,17 @@ internal sealed class SinglePassMerger : IMergeStrategy
             return;
         }
 
-        string? nextLine = await reader.ReadLineAsync(cancellationToken);
+        string? nextLine;
+        try
+        {
+            nextLine = await reader.ReadLineAsync(cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+        }
+        
         if (nextLine != null && RecordParser.TryParse(nextLine, out Record nextRecord))
         {
             var key = new RecordKey(nextRecord.Text, nextRecord.Number);

@@ -4,6 +4,10 @@
 
 1. The pattern of the string will never be changed in the future.
 
+2. Only integer numbers should be used in the number part of records. Any decimal numbers (e.g., "123.5. Text") will be treated as invalid and rejected during parsing.
+
+3. Multiple consecutive whitespaces in the text part will be normalized to single spaces. The string will be normalized by collapsing all whitespace sequences (spaces, tabs, etc.) into single spaces.
+
 ## CLI Usage
 
 The application provides two main commands: `generate` for creating test files and `sort` for sorting files. Command-line options override values from `appsettings.json`.

@@ -7,6 +7,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>FileSort.Sorter.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\FileSort.Core\FileSort.Core.csproj" />
         <ProjectReference Include="..\FileSort.Progress\FileSort.Progress.csproj" />
     </ItemGroup>

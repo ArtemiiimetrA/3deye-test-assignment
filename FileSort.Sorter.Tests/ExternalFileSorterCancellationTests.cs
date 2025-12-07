@@ -1,0 +1,106 @@
+using FileSort.Core.Interfaces;
+using FileSort.Core.Requests;
+using FileSort.Sorter;
+using Xunit;
+
+namespace FileSort.Sorter.Tests;
+
+public class ExternalFileSorterCancellationTests
+{
+    private readonly IExternalSorter _sorter = new ExternalFileSorter();
+
+    [Fact]
+    public async Task SortAsync_CancellationDuringChunking_ThrowsOperationCanceledException()
+    {
+        string inputPath = await TestHelpers.CreateTestFileAsync(
+            Enumerable.Range(1, 10000).Select(i => $"{i}. Test{i}"));
+        string outputPath = Path.GetTempFileName();
+        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
+        try
+        {
+            var request = new SortRequest
+            {
+                InputFilePath = inputPath,
+                OutputFilePath = outputPath,
+                TempDirectory = tempDir,
+                MaxRamMb = 100,
+                ChunkSizeMb = 1,
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                FileChunkTemplate = "chunk_{0:0000}.tmp",
+                BufferSizeBytes = 4 * 1024 * 1024,
+                DeleteTempFiles = true,
+                MaxOpenFiles = 500,
+                AdaptiveChunkSize = false,
+                MinChunkSizeMb = 64,
+                MaxChunkSizeMb = 512
+            };
+
+            using var cts = new CancellationTokenSource();
+            cts.CancelAfter(10); // Cancel quickly
+
+            await Assert.ThrowsAsync<OperationCanceledException>(
+                () => _sorter.SortAsync(request, cancellationToken: cts.Token));
+        }
+        finally
+        {
+            Cleanup(inputPath, outputPath, tempDir);
+        }
+    }
+
+    [Fact]
+    public async Task SortAsync_AlreadyCancelled_ThrowsImmediately()
+    {
+        string inputPath = await TestHelpers.CreateTestFileAsync(new[] { "1. Test" });
+        string outputPath = Path.GetTempFileName();
+        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+
+        try
+        {
+            var request = new SortRequest
+            {
+                InputFilePath = inputPath,
+                OutputFilePath = outputPath,
+                TempDirectory = tempDir,
+                MaxRamMb = 100,
+                ChunkSizeMb = 1,
+                MaxDegreeOfParallelism = Environment.ProcessorCount,
+                FileChunkTemplate = "chunk_{0:0000}.tmp",
+                BufferSizeBytes = 4 * 1024 * 1024,
+                DeleteTempFiles = true,
+                MaxOpenFiles = 500,
+                AdaptiveChunkSize = false,
+                MinChunkSizeMb = 64,
+                MaxChunkSizeMb = 512
+            };
+
+            using var cts = new CancellationTokenSource();
+            cts.Cancel();
+
+            await Assert.ThrowsAsync<OperationCanceledException>(
+                () => _sorter.SortAsync(request, cancellationToken: cts.Token));
+        }
+        finally
+        {
+            Cleanup(inputPath, outputPath, tempDir);
+        }
+    }
+
+    private static void Cleanup(string inputPath, string outputPath, string tempDir)
+    {
+        try
+        {
+            if (File.Exists(inputPath))
+                File.Delete(inputPath);
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, recursive: true);
+        }
+        catch
+        {
+            // Ignore cleanup errors
+        }
+    }
+}
+
