@@ -93,10 +93,7 @@ internal sealed class SinglePassMerger : IMergeStrategy
         }
 
         await WriteBufferHelpers.FlushRemainingLinesAsync(writeBuffer, writer);
-        
-        await HandleCancellationAsync(
-            ct => writer.FlushAsync(ct),
-            cancellationToken);
+        await writer.FlushAsync(cancellationToken);
     }
 
     private static async Task TryReadNextRecordAsync(
@@ -143,36 +140,6 @@ internal sealed class SinglePassMerger : IMergeStrategy
         }
         
         return false;
-    }
-
-    private static async Task<T> HandleCancellationAsync<T>(
-        Func<CancellationToken, Task<T>> operation,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            return await operation(cancellationToken);
-        }
-        catch (TaskCanceledException)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
-        }
-    }
-
-    private static async Task HandleCancellationAsync(
-        Func<CancellationToken, Task> operation,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await operation(cancellationToken);
-        }
-        catch (TaskCanceledException)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
-        }
     }
 
     private static void CloseReader(StreamReader?[] readers, int index)
