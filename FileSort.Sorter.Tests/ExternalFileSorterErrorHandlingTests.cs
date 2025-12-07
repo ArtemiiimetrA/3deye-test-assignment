@@ -9,6 +9,24 @@ public class ExternalFileSorterErrorHandlingTests
 {
     private readonly IExternalSorter _sorter = new ExternalFileSorter();
 
+    private static SortRequest CreateBaseRequest(string inputPath, string outputPath, string tempDir) => new SortRequest
+    {
+        InputFilePath = inputPath,
+        OutputFilePath = outputPath,
+        TempDirectory = tempDir,
+        MaxRamMb = 100,
+        ChunkSizeMb = 10,
+        MaxDegreeOfParallelism = 4,
+        FileChunkTemplate = "chunk_{0}.tmp",
+        BufferSizeBytes = 4096,
+        DeleteTempFiles = true,
+        MaxOpenFiles = 500,
+        MaxMergeParallelism = 2,
+        AdaptiveChunkSize = false,
+        MinChunkSizeMb = 64,
+        MaxChunkSizeMb = 512
+    };
+
     [Fact]
     public async Task SortAsync_NonExistentInputFile_ThrowsFileNotFoundException()
     {
@@ -18,22 +36,7 @@ public class ExternalFileSorterErrorHandlingTests
 
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = nonExistentPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 10,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(nonExistentPath, outputPath, tempDir);
 
             await Assert.ThrowsAsync<FileNotFoundException>(
                 () => _sorter.SortAsync(request));
@@ -55,22 +58,7 @@ public class ExternalFileSorterErrorHandlingTests
 
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = "", // Invalid
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 10,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest("", outputPath, tempDir); // Invalid input path
 
             await Assert.ThrowsAsync<ArgumentException>(
                 () => _sorter.SortAsync(request));
@@ -98,21 +86,12 @@ public class ExternalFileSorterErrorHandlingTests
 
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir) with
             {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
                 ChunkSizeMb = 1,
                 MaxDegreeOfParallelism = Environment.ProcessorCount,
                 FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                BufferSizeBytes = 4 * 1024 * 1024
             };
 
             // Should complete successfully, skipping invalid lines
@@ -138,21 +117,12 @@ public class ExternalFileSorterErrorHandlingTests
 
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir) with
             {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
                 ChunkSizeMb = 1,
                 MaxDegreeOfParallelism = Environment.ProcessorCount,
                 FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                BufferSizeBytes = 4 * 1024 * 1024
             };
 
             await _sorter.SortAsync(request);
@@ -184,21 +154,12 @@ public class ExternalFileSorterErrorHandlingTests
 
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir) with
             {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
                 ChunkSizeMb = 1,
                 MaxDegreeOfParallelism = Environment.ProcessorCount,
                 FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                BufferSizeBytes = 4 * 1024 * 1024
             };
 
             await _sorter.SortAsync(request);
@@ -230,21 +191,12 @@ public class ExternalFileSorterErrorHandlingTests
 
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir) with
             {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
                 ChunkSizeMb = 1,
                 MaxDegreeOfParallelism = Environment.ProcessorCount,
                 FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                BufferSizeBytes = 4 * 1024 * 1024
             };
 
             await _sorter.SortAsync(request);
@@ -277,21 +229,12 @@ public class ExternalFileSorterErrorHandlingTests
 
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir) with
             {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
                 ChunkSizeMb = 1,
                 MaxDegreeOfParallelism = Environment.ProcessorCount,
                 FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                BufferSizeBytes = 4 * 1024 * 1024
             };
 
             await _sorter.SortAsync(request);

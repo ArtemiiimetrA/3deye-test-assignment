@@ -13,6 +13,24 @@ public class SortRequestValidatorTests
         return path;
     }
 
+    private static SortRequest CreateBaseRequest(string inputPath) => new SortRequest
+    {
+        InputFilePath = inputPath,
+        OutputFilePath = "output.txt",
+        TempDirectory = Path.GetTempPath(),
+        MaxRamMb = 100,
+        ChunkSizeMb = 10,
+        MaxDegreeOfParallelism = 4,
+        FileChunkTemplate = "chunk_{0}.tmp",
+        BufferSizeBytes = 4096,
+        DeleteTempFiles = true,
+        MaxOpenFiles = 500,
+        MaxMergeParallelism = 2,
+        AdaptiveChunkSize = false,
+        MinChunkSizeMb = 64,
+        MaxChunkSizeMb = 512
+    };
+
     [Fact]
     public void Validate_NullRequest_ThrowsArgumentNullException()
     {
@@ -28,22 +46,7 @@ public class SortRequestValidatorTests
         string tempFile = CreateTempFile();
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = inputPath!,
-                OutputFilePath = "output.txt",
-                TempDirectory = Path.GetTempPath(),
-                MaxRamMb = 100,
-                ChunkSizeMb = 10,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(inputPath!);
 
             var exception = Assert.Throws<ArgumentException>(() => SortRequestValidator.Validate(request));
             Assert.Contains("InputFilePath", exception.Message);
@@ -57,22 +60,7 @@ public class SortRequestValidatorTests
     [Fact]
     public void Validate_NonExistentInputFile_ThrowsFileNotFoundException()
     {
-        var request = new SortRequest
-        {
-            InputFilePath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".txt"),
-            OutputFilePath = "output.txt",
-            TempDirectory = Path.GetTempPath(),
-            MaxRamMb = 100,
-            ChunkSizeMb = 10,
-            MaxDegreeOfParallelism = 4,
-            FileChunkTemplate = "chunk_{0}.tmp",
-            BufferSizeBytes = 4096,
-            DeleteTempFiles = true,
-            MaxOpenFiles = 500,
-            AdaptiveChunkSize = false,
-            MinChunkSizeMb = 64,
-            MaxChunkSizeMb = 512
-        };
+        var request = CreateBaseRequest(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".txt"));
 
         Assert.Throws<FileNotFoundException>(() => SortRequestValidator.Validate(request));
     }
@@ -86,21 +74,9 @@ public class SortRequestValidatorTests
         string tempFile = CreateTempFile();
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(tempFile) with
             {
-                InputFilePath = tempFile,
-                OutputFilePath = outputPath!,
-                TempDirectory = Path.GetTempPath(),
-                MaxRamMb = 100,
-                ChunkSizeMb = 10,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                OutputFilePath = outputPath!
             };
 
             var exception = Assert.Throws<ArgumentException>(() => SortRequestValidator.Validate(request));
@@ -121,21 +97,9 @@ public class SortRequestValidatorTests
         string tempFile = CreateTempFile();
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(tempFile) with
             {
-                InputFilePath = tempFile,
-                OutputFilePath = "output.txt",
-                TempDirectory = Path.GetTempPath(),
-                MaxRamMb = 100,
-                ChunkSizeMb = chunkSize,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                ChunkSizeMb = chunkSize
             };
 
             var exception = Assert.Throws<ArgumentException>(() => SortRequestValidator.Validate(request));
@@ -153,21 +117,9 @@ public class SortRequestValidatorTests
         string tempFile = CreateTempFile();
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(tempFile) with
             {
-                InputFilePath = tempFile,
-                OutputFilePath = "output.txt",
-                TempDirectory = Path.GetTempPath(),
-                MaxRamMb = 100,
-                ChunkSizeMb = 150,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                ChunkSizeMb = 150
             };
 
             var exception = Assert.Throws<ArgumentException>(() => SortRequestValidator.Validate(request));
@@ -188,21 +140,9 @@ public class SortRequestValidatorTests
         string tempFile = CreateTempFile();
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(tempFile) with
             {
-                InputFilePath = tempFile,
-                OutputFilePath = "output.txt",
-                TempDirectory = Path.GetTempPath(),
-                MaxRamMb = maxRam,
-                ChunkSizeMb = 10,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                MaxRamMb = maxRam
             };
 
             var exception = Assert.Throws<ArgumentException>(() => SortRequestValidator.Validate(request));
@@ -223,21 +163,9 @@ public class SortRequestValidatorTests
         string tempFile = CreateTempFile();
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(tempFile) with
             {
-                InputFilePath = tempFile,
-                OutputFilePath = "output.txt",
-                TempDirectory = Path.GetTempPath(),
-                MaxRamMb = 100,
-                ChunkSizeMb = 10,
-                MaxDegreeOfParallelism = parallelism,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                MaxDegreeOfParallelism = parallelism
             };
 
             var exception = Assert.Throws<ArgumentException>(() => SortRequestValidator.Validate(request));
@@ -258,21 +186,9 @@ public class SortRequestValidatorTests
         string tempFile = CreateTempFile();
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(tempFile) with
             {
-                InputFilePath = tempFile,
-                OutputFilePath = "output.txt",
-                TempDirectory = Path.GetTempPath(),
-                MaxRamMb = 100,
-                ChunkSizeMb = 10,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = bufferSize,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                BufferSizeBytes = bufferSize
             };
 
             var exception = Assert.Throws<ArgumentException>(() => SortRequestValidator.Validate(request));
@@ -293,21 +209,9 @@ public class SortRequestValidatorTests
         string tempFile = CreateTempFile();
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(tempFile) with
             {
-                InputFilePath = tempFile,
-                OutputFilePath = "output.txt",
-                TempDirectory = Path.GetTempPath(),
-                MaxRamMb = 100,
-                ChunkSizeMb = 10,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = maxOpenFiles,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                MaxOpenFiles = maxOpenFiles
             };
 
             var exception = Assert.Throws<ArgumentException>(() => SortRequestValidator.Validate(request));
@@ -325,18 +229,8 @@ public class SortRequestValidatorTests
         string tempFile = CreateTempFile();
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(tempFile) with
             {
-                InputFilePath = tempFile,
-                OutputFilePath = "output.txt",
-                TempDirectory = Path.GetTempPath(),
-                MaxRamMb = 100,
-                ChunkSizeMb = 10,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
                 AdaptiveChunkSize = true,
                 MinChunkSizeMb = 512,
                 MaxChunkSizeMb = 256
@@ -357,22 +251,7 @@ public class SortRequestValidatorTests
         string tempFile = CreateTempFile();
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = tempFile,
-                OutputFilePath = "output.txt",
-                TempDirectory = Path.GetTempPath(),
-                MaxRamMb = 100,
-                ChunkSizeMb = 10,
-                MaxDegreeOfParallelism = 4,
-                FileChunkTemplate = "chunk_{0}.tmp",
-                BufferSizeBytes = 4096,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(tempFile);
 
             var exception = Record.Exception(() => SortRequestValidator.Validate(request));
             Assert.Null(exception);

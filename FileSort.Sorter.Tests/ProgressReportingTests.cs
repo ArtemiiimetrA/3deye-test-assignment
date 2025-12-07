@@ -12,6 +12,24 @@ public class ProgressReportingTests
 {
     private readonly IExternalSorter _sorter = new ExternalFileSorter();
 
+    private static SortRequest CreateBaseRequest(string inputPath, string outputPath, string tempDir) => new SortRequest
+    {
+        InputFilePath = inputPath,
+        OutputFilePath = outputPath,
+        TempDirectory = tempDir,
+        MaxRamMb = 100,
+        ChunkSizeMb = 1,
+        MaxDegreeOfParallelism = Environment.ProcessorCount,
+        FileChunkTemplate = "chunk_{0:0000}.tmp",
+        BufferSizeBytes = 4 * 1024 * 1024,
+        DeleteTempFiles = true,
+        MaxOpenFiles = 500,
+        MaxMergeParallelism = 2,
+        AdaptiveChunkSize = false,
+        MinChunkSizeMb = 64,
+        MaxChunkSizeMb = 512
+    };
+
     [Fact]
     public async Task SortAsync_ReportsProgressDuringChunking()
     {
@@ -25,22 +43,7 @@ public class ProgressReportingTests
             var progressReports = new List<SortProgress>();
             var progress = new Progress<SortProgress>(p => progressReports.Add(p));
 
-            var request = new SortRequest
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1,
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir);
 
             await _sorter.SortAsync(request, progress);
 
@@ -67,22 +70,7 @@ public class ProgressReportingTests
             var progressReports = new List<SortProgress>();
             var progress = new Progress<SortProgress>(p => progressReports.Add(p));
 
-            var request = new SortRequest
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1,
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir);
 
             await _sorter.SortAsync(request, progress);
 
@@ -119,7 +107,8 @@ public class ProgressReportingTests
                 MaxOpenFiles = 500,
                 AdaptiveChunkSize = false,
                 MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                MaxChunkSizeMb = 512,
+                MaxMergeParallelism = 1
             };
 
             var exception = await Record.ExceptionAsync(() => _sorter.SortAsync(request, null));

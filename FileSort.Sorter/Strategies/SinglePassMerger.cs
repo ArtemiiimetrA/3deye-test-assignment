@@ -60,31 +60,7 @@ internal sealed class SinglePassMerger : IMergeStrategy
             StreamReader reader = FileIoHelpers.CreateFileReader(filePaths[i], _bufferSize);
             readers[i] = reader;
 
-            await EnqueueFirstRecordAsync(reader, i, priorityQueue, cancellationToken);
-        }
-    }
-
-    private static async Task EnqueueFirstRecordAsync(
-        StreamReader reader,
-        int fileIndex,
-        PriorityQueue<RecordWithSource, RecordKey> priorityQueue,
-        CancellationToken cancellationToken)
-    {
-        string? line;
-        try
-        {
-            line = await reader.ReadLineAsync(cancellationToken);
-        }
-        catch (TaskCanceledException)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
-        }
-        
-        if (line != null && RecordParser.TryParse(line, out Record record))
-        {
-            var key = new RecordKey(record.Text, record.Number);
-            priorityQueue.Enqueue(new RecordWithSource(record, fileIndex), key);
+            await TryReadAndEnqueueRecordAsync(reader, i, priorityQueue, cancellationToken);
         }
     }
 
@@ -118,16 +94,9 @@ internal sealed class SinglePassMerger : IMergeStrategy
 
         await WriteBufferHelpers.FlushRemainingLinesAsync(writeBuffer, writer);
         
-        cancellationToken.ThrowIfCancellationRequested();
-        try
-        {
-            await writer.FlushAsync(cancellationToken);
-        }
-        catch (TaskCanceledException)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
-        }
+        await HandleCancellationAsync(
+            ct => writer.FlushAsync(ct),
+            cancellationToken);
     }
 
     private static async Task TryReadNextRecordAsync(
@@ -142,10 +111,23 @@ internal sealed class SinglePassMerger : IMergeStrategy
             return;
         }
 
-        string? nextLine;
+        bool success = await TryReadAndEnqueueRecordAsync(reader, sourceIndex, priorityQueue, cancellationToken);
+        if (!success)
+        {
+            CloseReader(readers, sourceIndex);
+        }
+    }
+
+    private static async Task<bool> TryReadAndEnqueueRecordAsync(
+        StreamReader reader,
+        int fileIndex,
+        PriorityQueue<RecordWithSource, RecordKey> priorityQueue,
+        CancellationToken cancellationToken)
+    {
+        string? line;
         try
         {
-            nextLine = await reader.ReadLineAsync(cancellationToken);
+            line = await reader.ReadLineAsync(cancellationToken);
         }
         catch (TaskCanceledException)
         {
@@ -153,14 +135,43 @@ internal sealed class SinglePassMerger : IMergeStrategy
             throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
         }
         
-        if (nextLine != null && RecordParser.TryParse(nextLine, out Record nextRecord))
+        if (line != null && RecordParser.TryParse(line, out Record record))
         {
-            var key = new RecordKey(nextRecord.Text, nextRecord.Number);
-            priorityQueue.Enqueue(new RecordWithSource(nextRecord, sourceIndex), key);
+            var key = new RecordKey(record.Text, record.Number);
+            priorityQueue.Enqueue(new RecordWithSource(record, fileIndex), key);
+            return true;
         }
-        else
+        
+        return false;
+    }
+
+    private static async Task<T> HandleCancellationAsync<T>(
+        Func<CancellationToken, Task<T>> operation,
+        CancellationToken cancellationToken)
+    {
+        try
         {
-            CloseReader(readers, sourceIndex);
+            return await operation(cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+        }
+    }
+
+    private static async Task HandleCancellationAsync(
+        Func<CancellationToken, Task> operation,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await operation(cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
         }
     }
 

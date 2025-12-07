@@ -10,6 +10,24 @@ public class ExternalFileSorterTests
 {
     private readonly IExternalSorter _sorter = new ExternalFileSorter();
 
+    private static SortRequest CreateBaseRequest(string inputPath, string outputPath, string tempDir) => new SortRequest
+    {
+        InputFilePath = inputPath,
+        OutputFilePath = outputPath,
+        TempDirectory = tempDir,
+        MaxRamMb = 100,
+        ChunkSizeMb = 1,
+        MaxDegreeOfParallelism = Environment.ProcessorCount,
+        FileChunkTemplate = "chunk_{0:0000}.tmp",
+        BufferSizeBytes = 4 * 1024 * 1024,
+        DeleteTempFiles = true,
+        MaxOpenFiles = 500,
+        MaxMergeParallelism = 2,
+        AdaptiveChunkSize = true,
+        MinChunkSizeMb = 64,
+        MaxChunkSizeMb = 512
+    };
+
     [Fact]
     public async Task SortAsync_SingleLine_SortsCorrectly()
     {
@@ -19,22 +37,7 @@ public class ExternalFileSorterTests
 
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1,
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = true,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir);
 
             await _sorter.SortAsync(request);
 
@@ -62,22 +65,7 @@ public class ExternalFileSorterTests
 
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1,
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = true,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir);
 
             await _sorter.SortAsync(request);
 
@@ -108,22 +96,7 @@ public class ExternalFileSorterTests
 
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1,
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = true,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir);
 
             await _sorter.SortAsync(request);
 
@@ -146,22 +119,7 @@ public class ExternalFileSorterTests
 
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1,
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = true,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir);
 
             await _sorter.SortAsync(request);
 
@@ -194,21 +152,9 @@ public class ExternalFileSorterTests
 
         try
         {
-            var request = new SortRequest
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir) with
             {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1, // Small chunk size to force multiple chunks
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 10, // Small to test multi-pass merge
-                AdaptiveChunkSize = true,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
+                MaxOpenFiles = 10 // Small to test multi-pass merge
             };
 
             await _sorter.SortAsync(request);
@@ -243,22 +189,7 @@ public class ExternalFileSorterTests
 
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1,
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = true,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir);
 
             await _sorter.SortAsync(request);
 

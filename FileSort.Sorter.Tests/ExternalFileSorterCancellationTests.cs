@@ -9,6 +9,24 @@ public class ExternalFileSorterCancellationTests
 {
     private readonly IExternalSorter _sorter = new ExternalFileSorter();
 
+    private static SortRequest CreateBaseRequest(string inputPath, string outputPath, string tempDir) => new SortRequest
+    {
+        InputFilePath = inputPath,
+        OutputFilePath = outputPath,
+        TempDirectory = tempDir,
+        MaxRamMb = 100,
+        ChunkSizeMb = 1,
+        MaxDegreeOfParallelism = 1,
+        FileChunkTemplate = "chunk_{0:0000}.tmp",
+        BufferSizeBytes = 4 * 1024 * 1024,
+        DeleteTempFiles = true,
+        MaxOpenFiles = 500,
+        MaxMergeParallelism = 2,
+        AdaptiveChunkSize = false,
+        MinChunkSizeMb = 64,
+        MaxChunkSizeMb = 512
+    };
+
     [Fact]
     public async Task SortAsync_CancellationDuringChunking_ThrowsOperationCanceledException()
     {
@@ -19,27 +37,12 @@ public class ExternalFileSorterCancellationTests
 
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1,
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir);
 
             using var cts = new CancellationTokenSource();
             cts.CancelAfter(10); // Cancel quickly
 
-            await Assert.ThrowsAsync<OperationCanceledException>(
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
                 () => _sorter.SortAsync(request, cancellationToken: cts.Token));
         }
         finally
@@ -57,27 +60,12 @@ public class ExternalFileSorterCancellationTests
 
         try
         {
-            var request = new SortRequest
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1,
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = false,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var request = CreateBaseRequest(inputPath, outputPath, tempDir);
 
             using var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            await Assert.ThrowsAsync<OperationCanceledException>(
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(
                 () => _sorter.SortAsync(request, cancellationToken: cts.Token));
         }
         finally

@@ -16,7 +16,7 @@ public sealed record SortRequest
     public int BufferSizeBytes { get; init; }
     public bool DeleteTempFiles { get; init; }
     public int MaxOpenFiles { get; init; }
-    public int MaxMergeParallelism { get; init; }
+    public int MaxMergeParallelism { get; init; } = 1;
     public bool AdaptiveChunkSize { get; init; }
     public int MinChunkSizeMb { get; init; }
     public int MaxChunkSizeMb { get; init; }

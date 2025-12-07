@@ -8,6 +8,24 @@ namespace FileSort.Sorter.Tests;
 
 public class IntegrationTests
 {
+    private static SortRequest CreateBaseSortRequest(string inputPath, string outputPath, string tempDir) => new SortRequest
+    {
+        InputFilePath = inputPath,
+        OutputFilePath = outputPath,
+        TempDirectory = tempDir,
+        MaxRamMb = 100,
+        ChunkSizeMb = 1,
+        MaxDegreeOfParallelism = Environment.ProcessorCount,
+        FileChunkTemplate = "chunk_{0:0000}.tmp",
+        BufferSizeBytes = 4 * 1024 * 1024,
+        DeleteTempFiles = true,
+        MaxOpenFiles = 500,
+        MaxMergeParallelism = 2,
+        AdaptiveChunkSize = true,
+        MinChunkSizeMb = 64,
+        MaxChunkSizeMb = 512
+    };
+
     [Fact]
     public async Task EndToEnd_GenerateAndSort_ProducesSortedOutput()
     {
@@ -35,22 +53,7 @@ public class IntegrationTests
 
             // Step 2: Sort the file
             var sorter = new ExternalFileSorter();
-            var sortRequest = new SortRequest
-            {
-                InputFilePath = inputPath,
-                OutputFilePath = outputPath,
-                TempDirectory = tempDir,
-                MaxRamMb = 100,
-                ChunkSizeMb = 1,
-                MaxDegreeOfParallelism = Environment.ProcessorCount,
-                FileChunkTemplate = "chunk_{0:0000}.tmp",
-                BufferSizeBytes = 4 * 1024 * 1024,
-                DeleteTempFiles = true,
-                MaxOpenFiles = 500,
-                AdaptiveChunkSize = true,
-                MinChunkSizeMb = 64,
-                MaxChunkSizeMb = 512
-            };
+            var sortRequest = CreateBaseSortRequest(inputPath, outputPath, tempDir);
 
             await sorter.SortAsync(sortRequest);
             Assert.True(File.Exists(outputPath));
