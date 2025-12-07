@@ -47,6 +47,7 @@ public static class SortCommand
                 BufferSizeBytes = baseOptions.BufferSizeBytes,
                 DeleteTempFiles = baseOptions.DeleteTempFiles,
                 MaxOpenFiles = baseOptions.MaxOpenFiles,
+                MaxMergeParallelism = baseOptions.MaxMergeParallelism,
                 AdaptiveChunkSize = baseOptions.AdaptiveChunkSize,
                 MinChunkSizeMb = baseOptions.MinChunkSizeMb,
                 MaxChunkSizeMb = baseOptions.MaxChunkSizeMb

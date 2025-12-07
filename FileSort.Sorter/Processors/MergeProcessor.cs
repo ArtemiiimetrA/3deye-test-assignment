@@ -13,11 +13,13 @@ internal sealed class MergeProcessor
 {
     private readonly int _maxOpenFiles;
     private readonly int _bufferSize;
+    private readonly int _maxMergeParallelism;
 
-    public MergeProcessor(int maxOpenFiles, int bufferSize)
+    public MergeProcessor(int maxOpenFiles, int bufferSize, int maxMergeParallelism)
     {
         _maxOpenFiles = maxOpenFiles;
         _bufferSize = bufferSize;
+        _maxMergeParallelism = maxMergeParallelism;
     }
 
     public async Task MergeChunksAsync(
@@ -41,13 +43,25 @@ internal sealed class MergeProcessor
         IMergeStrategy strategy = MergeStrategyFactory.CreateStrategy(
             chunkFilePaths.Count,
             _maxOpenFiles,
-            _bufferSize);
+            _bufferSize,
+            _maxMergeParallelism);
 
-        await strategy.MergeAsync(
-            chunkFilePaths,
-            outputFilePath,
-            progress,
-            cancellationToken);
+        try
+        {
+            await strategy.MergeAsync(
+                chunkFilePaths,
+                outputFilePath,
+                progress,
+                cancellationToken);
+        }
+        finally
+        {
+            // Dispose strategy if it implements IDisposable (e.g., MultiPassMerger with SemaphoreSlim)
+            if (strategy is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
     }
 
     private static async Task CreateEmptyOutputFile(string outputFilePath)

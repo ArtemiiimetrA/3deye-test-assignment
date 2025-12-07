@@ -38,6 +38,9 @@ internal static class SortRequestValidator
         if (request.MaxOpenFiles < 2)
             throw new ArgumentException("MaxOpenFiles must be at least 2.", nameof(request));
 
+        if (request.MaxMergeParallelism <= 0)
+            throw new ArgumentException("MaxMergeParallelism must be greater than 0.", nameof(request));
+
         if (request.MinChunkSizeMb > request.MaxChunkSizeMb)
             throw new ArgumentException("MinChunkSizeMb cannot exceed MaxChunkSizeMb.", nameof(request));
     }

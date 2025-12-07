@@ -11,18 +11,20 @@ internal static class MergeStrategyFactory
     /// <param name="fileCount">Number of files to merge</param>
     /// <param name="maxOpenFiles">Maximum number of files that can be opened simultaneously</param>
     /// <param name="bufferSize">Buffer size in bytes for file I/O operations</param>
+    /// <param name="maxMergeParallelism">Maximum number of batches that can be merged in parallel</param>
     /// <returns>An appropriate merge strategy implementation</returns>
     public static IMergeStrategy CreateStrategy(
         int fileCount,
         int maxOpenFiles,
-        int bufferSize)
+        int bufferSize,
+        int maxMergeParallelism)
     {
         if (fileCount <= maxOpenFiles)
         {
             return new SinglePassMerger(bufferSize);
         }
 
-        return new MultiPassMerger(maxOpenFiles, bufferSize);
+        return new MultiPassMerger(maxOpenFiles, bufferSize, maxMergeParallelism);
     }
 }
 

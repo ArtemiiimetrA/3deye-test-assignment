@@ -49,7 +49,7 @@ public sealed class ExternalFileSorter : IExternalSorter
         IProgress<SortProgress>? progress,
         CancellationToken cancellationToken)
     {
-        var mergeProcessor = new MergeProcessor(request.MaxOpenFiles, request.BufferSizeBytes);
+        var mergeProcessor = new MergeProcessor(request.MaxOpenFiles, request.BufferSizeBytes, request.MaxMergeParallelism);
         await mergeProcessor.MergeChunksAsync(chunkFiles, request.OutputFilePath, progress, cancellationToken);
     }
 

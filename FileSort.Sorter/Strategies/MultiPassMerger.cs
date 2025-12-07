@@ -8,16 +8,21 @@ namespace FileSort.Sorter.Strategies;
 /// <summary>
 /// Performs k-way merge using cascading multi-pass strategy.
 /// Files are merged in batches when they exceed the maximum open file limit.
+/// Supports parallel batch processing to improve performance.
 /// </summary>
-internal sealed class MultiPassMerger : IMergeStrategy
+internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
 {
     private readonly int _maxOpenFiles;
     private readonly SinglePassMerger _singlePassMerger;
+    private readonly int _maxMergeParallelism;
+    private readonly SemaphoreSlim _semaphore;
 
-    public MultiPassMerger(int maxOpenFiles, int bufferSize)
+    public MultiPassMerger(int maxOpenFiles, int bufferSize, int maxMergeParallelism)
     {
         _maxOpenFiles = maxOpenFiles;
         _singlePassMerger = new SinglePassMerger(bufferSize);
+        _maxMergeParallelism = maxMergeParallelism;
+        _semaphore = new SemaphoreSlim(maxMergeParallelism);
     }
 
     public async Task MergeAsync(
@@ -108,9 +113,9 @@ internal sealed class MultiPassMerger : IMergeStrategy
         IProgress<SortProgress>? progress,
         CancellationToken cancellationToken)
     {
-        List<string> nextPassFiles = new();
         int batchSize = CalculateBatchSize();
         int totalBatches = CalculateTotalBatches(currentFiles.Count, batchSize);
+        var batchTasks = new List<Task<string>>();
 
         for (int i = 0; i < currentFiles.Count; i += batchSize)
         {
@@ -118,16 +123,53 @@ internal sealed class MultiPassMerger : IMergeStrategy
 
             int batchIndex = i / batchSize;
             var batch = GetBatch(currentFiles, i, batchSize);
-
-            ReportBatchProgress(passNumber, totalBatches, batchIndex, progress);
-
             string intermediateFile = GenerateIntermediateFilePath(tempDir, passNumber, batchIndex);
-            await MergeBatchAsync(batch, intermediateFile, cancellationToken);
 
-            nextPassFiles.Add(intermediateFile);
+            var task = ProcessBatchWithSemaphoreAsync(
+                batch,
+                intermediateFile,
+                passNumber,
+                totalBatches,
+                batchIndex,
+                progress,
+                cancellationToken);
+
+            batchTasks.Add(task);
         }
 
-        return nextPassFiles;
+        string[] nextPassFiles = await Task.WhenAll(batchTasks);
+        return new List<string>(nextPassFiles);
+    }
+
+    private async Task<string> ProcessBatchWithSemaphoreAsync(
+        List<string> batch,
+        string intermediateFile,
+        int passNumber,
+        int totalBatches,
+        int batchIndex,
+        IProgress<SortProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _semaphore.WaitAsync(cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+        }
+
+        try
+        {
+            ReportBatchProgress(passNumber, totalBatches, batchIndex, progress);
+            await MergeBatchAsync(batch, intermediateFile, cancellationToken);
+            return intermediateFile;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     private int CalculateBatchSize()
@@ -205,6 +247,11 @@ internal sealed class MultiPassMerger : IMergeStrategy
     private static int CalculateTotalPasses(int fileCount, int maxOpenFiles)
     {
         return MergeBatchHelpers.CalculateTotalPasses(fileCount, maxOpenFiles);
+    }
+
+    public void Dispose()
+    {
+        _semaphore?.Dispose();
     }
 }
 

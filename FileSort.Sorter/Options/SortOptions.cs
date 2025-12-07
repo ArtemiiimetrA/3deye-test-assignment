@@ -14,6 +14,7 @@ public sealed class SortOptions
     public int BufferSizeBytes { get; init; }
     public bool DeleteTempFiles { get; init; }
     public int MaxOpenFiles { get; init; }
+    public int MaxMergeParallelism { get; init; }
     public bool AdaptiveChunkSize { get; init; }
     public int MinChunkSizeMb { get; init; }
     public int MaxChunkSizeMb { get; init; }
@@ -35,6 +36,7 @@ public sealed class SortOptions
         int bufferSizeBytes,
         bool deleteTempFiles,
         int maxOpenFiles,
+        int maxMergeParallelism,
         bool adaptiveChunkSize,
         int minChunkSizeMb,
         int maxChunkSizeMb)
@@ -49,6 +51,7 @@ public sealed class SortOptions
         BufferSizeBytes = bufferSizeBytes;
         DeleteTempFiles = deleteTempFiles;
         MaxOpenFiles = maxOpenFiles;
+        MaxMergeParallelism = maxMergeParallelism;
         AdaptiveChunkSize = adaptiveChunkSize;
         MinChunkSizeMb = minChunkSizeMb;
         MaxChunkSizeMb = maxChunkSizeMb;

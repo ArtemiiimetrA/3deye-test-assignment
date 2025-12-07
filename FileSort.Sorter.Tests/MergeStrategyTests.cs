@@ -147,7 +147,7 @@ public class MergeStrategyTests
 
         try
         {
-            var merger = new MultiPassMerger(maxOpenFiles: 5, bufferSize: 4096);
+            using var merger = new MultiPassMerger(maxOpenFiles: 5, bufferSize: 4096, maxMergeParallelism: 2);
             await merger.MergeAsync(files, outputPath, null, CancellationToken.None);
 
             var records = await TestHelpers.ReadRecordsFromFileAsync(outputPath);
@@ -174,7 +174,7 @@ public class MergeStrategyTests
 
         try
         {
-            var merger = new MultiPassMerger(maxOpenFiles: 5, bufferSize: 4096);
+            using var merger = new MultiPassMerger(maxOpenFiles: 5, bufferSize: 4096, maxMergeParallelism: 2);
             await merger.MergeAsync(new[] { file1 }, outputPath, null, CancellationToken.None);
 
             var records = await TestHelpers.ReadRecordsFromFileAsync(outputPath);
@@ -201,7 +201,7 @@ public class MergeStrategyTests
             using var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            var merger = new MultiPassMerger(maxOpenFiles: 3, bufferSize: 4096);
+            using var merger = new MultiPassMerger(maxOpenFiles: 3, bufferSize: 4096, maxMergeParallelism: 2);
             await Assert.ThrowsAsync<OperationCanceledException>(
                 () => merger.MergeAsync(files, outputPath, null, cts.Token));
         }
@@ -220,7 +220,7 @@ public class MergeStrategyTests
     [Fact]
     public void MergeStrategyFactory_FileCountWithinLimit_ReturnsSinglePassMerger()
     {
-        var strategy = MergeStrategyFactory.CreateStrategy(fileCount: 5, maxOpenFiles: 10, bufferSize: 4096);
+        var strategy = MergeStrategyFactory.CreateStrategy(fileCount: 5, maxOpenFiles: 10, bufferSize: 4096, maxMergeParallelism: 2);
 
         Assert.IsType<SinglePassMerger>(strategy);
     }
@@ -228,15 +228,19 @@ public class MergeStrategyTests
     [Fact]
     public void MergeStrategyFactory_FileCountExceedsLimit_ReturnsMultiPassMerger()
     {
-        var strategy = MergeStrategyFactory.CreateStrategy(fileCount: 20, maxOpenFiles: 10, bufferSize: 4096);
+        var strategy = MergeStrategyFactory.CreateStrategy(fileCount: 20, maxOpenFiles: 10, bufferSize: 4096, maxMergeParallelism: 2);
 
         Assert.IsType<MultiPassMerger>(strategy);
+        if (strategy is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
     }
 
     [Fact]
     public void MergeStrategyFactory_FileCountEqualsLimit_ReturnsSinglePassMerger()
     {
-        var strategy = MergeStrategyFactory.CreateStrategy(fileCount: 10, maxOpenFiles: 10, bufferSize: 4096);
+        var strategy = MergeStrategyFactory.CreateStrategy(fileCount: 10, maxOpenFiles: 10, bufferSize: 4096, maxMergeParallelism: 2);
 
         Assert.IsType<SinglePassMerger>(strategy);
     }
