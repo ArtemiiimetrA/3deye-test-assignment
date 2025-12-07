@@ -1,6 +1,7 @@
 using System.Threading;
 using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
+using FileSort.Core.Models.Progress;
 using FileSort.Core.Parsing;
 using FileSort.Core.Requests;
 using FileSort.Sorter.Helpers;
@@ -165,7 +166,7 @@ internal sealed class ChunkCreationCoordinator : IDisposable
         string[] chunkFilePaths = await Task.WhenAll(_chunkTasks);
         var chunkFiles = new List<string>(chunkFilePaths);
 
-        SortProgressReporter.ReportFinal(chunkFiles.Count, _totalBytes, _progress);
+        SortProgressReporter.ReportFinal(chunkFiles.Count, _progress);
 
         return chunkFiles;
     }

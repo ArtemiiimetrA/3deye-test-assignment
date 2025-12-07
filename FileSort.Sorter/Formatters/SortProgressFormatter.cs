@@ -1,4 +1,5 @@
 using FileSort.Core.Models;
+using FileSort.Core.Models.Progress;
 
 namespace FileSort.Sorter.Formatters;
 
@@ -12,23 +13,16 @@ public static class SortProgressFormatter
     /// </summary>
     public static string Format(SortProgress progress)
     {
-        double percent = progress.TotalBytes > 0 
-            ? (double)progress.BytesProcessed / progress.TotalBytes * 100 
-            : 0;
-
-        var parts = new List<string>
-        {
-            $"Progress: {percent:F2}%"
-        };
+        var parts = new List<string>();
 
         if (progress.ChunksCreated > 0 || progress.ChunksMerged > 0)
         {
             parts.Add($"Chunks: {progress.ChunksCreated} created, {progress.ChunksMerged} merged");
         }
 
-        if (progress.TotalMergePasses > 0)
+        if (progress.CurrentMergePass.HasValue && progress.TotalMergePasses > 0)
         {
-            parts.Add($"Pass {progress.CurrentMergePass}/{progress.TotalMergePasses}");
+            parts.Add($"Pass {progress.CurrentMergePass.Value}/{progress.TotalMergePasses}");
         }
 
         if (progress.TotalBatchesInPass > 0)

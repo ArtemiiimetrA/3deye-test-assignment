@@ -1,4 +1,5 @@
 using FileSort.Core.Models;
+using FileSort.Core.Models.Progress;
 
 namespace FileSort.Sorter.Strategies;
 

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.CommandLine;
+using FileSort.Core.Models.Progress;
 
 namespace FileSort.App.Commands;
 

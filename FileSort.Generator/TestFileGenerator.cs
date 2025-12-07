@@ -2,6 +2,7 @@ using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
 using FileSort.Core.Requests;
 using System.Text;
+using FileSort.Core.Models.Progress;
 using FileSort.Generator.Validation;
 
 namespace FileSort.Generator;

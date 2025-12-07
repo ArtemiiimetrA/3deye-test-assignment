@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.CommandLine;
+using FileSort.Core.Models.Progress;
 
 namespace FileSort.App.Commands;
 
@@ -54,7 +55,7 @@ public static class SortCommand
             logger.LogInformation("Sorting file: {InputPath} -> {OutputPath}", request.InputFilePath, request.OutputFilePath);
 
             var progress = progressFactory.CreateConsoleReporter(
-                shouldReport: p => p.ChunksCreated > 0 || p.ChunksMerged > 0 || p.CurrentMergePass > 0,
+                shouldReport: p => p.ChunksCreated > 0 || p.ChunksMerged > 0 || p.CurrentMergePass.HasValue,
                 showInline: true);
 
             try

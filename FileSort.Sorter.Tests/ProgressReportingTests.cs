@@ -1,5 +1,6 @@
 using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
+using FileSort.Core.Models.Progress;
 using FileSort.Core.Requests;
 using FileSort.Sorter;
 using Xunit;

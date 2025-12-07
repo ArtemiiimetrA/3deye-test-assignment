@@ -1,4 +1,5 @@
 using FileSort.Core.Models;
+using FileSort.Core.Models.Progress;
 using FileSort.Sorter.Configuration;
 
 namespace FileSort.Sorter.Helpers;
@@ -25,30 +26,25 @@ internal static class SortProgressReporter
         
         if (currentInterval > previousInterval || bytesRead >= totalBytes)
         {
-            Report(chunkIndex, bytesRead, totalBytes, progress);
+            Report(chunkIndex, progress);
         }
     }
 
     public static void Report(
         int chunksCreated,
-        long bytesProcessed,
-        long totalBytes,
         IProgress<SortProgress>? progress)
     {
         progress?.Report(new SortProgress
         {
-            ChunksCreated = chunksCreated,
-            BytesProcessed = bytesProcessed,
-            TotalBytes = totalBytes
+            ChunksCreated = chunksCreated
         });
     }
 
     public static void ReportFinal(
         int chunksCreated,
-        long totalBytes,
         IProgress<SortProgress>? progress)
     {
-        Report(chunksCreated, totalBytes, totalBytes, progress);
+        Report(chunksCreated, progress);
     }
 
     public static void ReportMergeProgress(
