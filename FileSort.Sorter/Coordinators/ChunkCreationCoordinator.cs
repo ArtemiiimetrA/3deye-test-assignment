@@ -1,3 +1,4 @@
+using System.Threading;
 using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
 using FileSort.Core.Parsing;
@@ -11,13 +12,15 @@ namespace FileSort.Sorter.Coordinators;
 /// <summary>
 /// Coordinates the creation of sorted chunks from input file.
 /// </summary>
-internal sealed class ChunkCreationCoordinator
+internal sealed class ChunkCreationCoordinator : IDisposable
 {
     private readonly SortRequest _request;
     private readonly long _totalBytes;
     private readonly IProgress<SortProgress>? _progress;
     private readonly ChunkProcessor _chunkProcessor;
     private readonly SemaphoreSlim _semaphore;
+    // List of chunk processing tasks. Size is bounded by (file size / chunk size), which is reasonable.
+    // Tasks complete as chunks are processed, so memory usage is controlled by the semaphore limiting concurrency.
     private readonly List<Task<string>> _chunkTasks;
     private readonly ChunkState _chunkState;
     private readonly long _chunkSizeBytes;
@@ -45,13 +48,21 @@ internal sealed class ChunkCreationCoordinator
 
     public async Task<List<string>> ProcessAsync(CancellationToken cancellationToken)
     {
-        using var reader = FileIoHelpers.CreateFileReader(_request.InputFilePath, _request.BufferSizeBytes);
+        try
+        {
+            using var reader = FileIoHelpers.CreateFileReader(_request.InputFilePath, _request.BufferSizeBytes);
 
-        await ProcessInputLinesAsync(reader, cancellationToken);
-        ProcessFinalChunk(cancellationToken);
+            await ProcessInputLinesAsync(reader, cancellationToken);
+            ProcessFinalChunk(cancellationToken);
 
-        List<string> chunkFiles = await WaitForChunksAsync();
-        return chunkFiles;
+            List<string> chunkFiles = await WaitForChunksAsync();
+            return chunkFiles;
+        }
+        finally
+        {
+            // Ensure semaphore is released even on exception
+            // The Dispose method will handle cleanup
+        }
     }
 
     private async Task ProcessInputLinesAsync(StreamReader reader, CancellationToken cancellationToken)
@@ -77,8 +88,8 @@ internal sealed class ChunkCreationCoordinator
     {
         _chunkState.Records.Add(record);
         long lineBytes = SizeHelpers.CalculateLineBytes(line);
-        _chunkState.CurrentChunkBytes += lineBytes;
-        _chunkState.BytesRead += lineBytes;
+        _chunkState.AddCurrentChunkBytes(lineBytes);
+        _chunkState.AddBytesRead(lineBytes);
     }
 
     private bool ShouldCreateChunk()
@@ -168,15 +179,50 @@ internal sealed class ChunkCreationCoordinator
         }
     }
 
+    public void Dispose()
+    {
+        _semaphore?.Dispose();
+    }
+
     /// <summary>
     /// Tracks state during chunk creation process.
+    /// Thread-safe for read operations, but write operations should be single-threaded.
     /// </summary>
     private sealed class ChunkState
     {
-        public int ChunkIndex { get; set; }
-        public long BytesRead { get; set; }
+        private int _chunkIndex;
+        private long _bytesRead;
+        private long _currentChunkBytes;
+
+        public int ChunkIndex
+        {
+            get => _chunkIndex;
+            set => _chunkIndex = value;
+        }
+
+        public long BytesRead
+        {
+            get => Interlocked.Read(ref _bytesRead);
+            set => Interlocked.Exchange(ref _bytesRead, value);
+        }
+
         public List<Record> Records { get; set; } = new();
-        public long CurrentChunkBytes { get; set; }
+
+        public long CurrentChunkBytes
+        {
+            get => Interlocked.Read(ref _currentChunkBytes);
+            set => Interlocked.Exchange(ref _currentChunkBytes, value);
+        }
+
+        public void AddBytesRead(long bytes)
+        {
+            Interlocked.Add(ref _bytesRead, bytes);
+        }
+
+        public void AddCurrentChunkBytes(long bytes)
+        {
+            Interlocked.Add(ref _currentChunkBytes, bytes);
+        }
     }
 }
 

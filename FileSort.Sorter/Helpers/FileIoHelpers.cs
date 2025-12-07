@@ -41,6 +41,37 @@ internal static class FileIoHelpers
         File.Copy(sourceFile, destinationFile, overwrite: true);
     }
 
+    public static async Task CopyFileAsync(
+        string sourceFile,
+        string destinationFile,
+        int bufferSize = 81920,
+        CancellationToken cancellationToken = default)
+    {
+        string? directory = Path.GetDirectoryName(destinationFile);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        await using var sourceStream = new FileStream(
+            sourceFile,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize,
+            FileOptions.SequentialScan | FileOptions.Asynchronous);
+
+        await using var destinationStream = new FileStream(
+            destinationFile,
+            FileMode.Create,
+            FileAccess.Write,
+            FileShare.None,
+            bufferSize,
+            FileOptions.SequentialScan | FileOptions.Asynchronous);
+
+        await sourceStream.CopyToAsync(destinationStream, bufferSize, cancellationToken);
+    }
+
     public static void SafeDeleteFile(string filePath)
     {
         try

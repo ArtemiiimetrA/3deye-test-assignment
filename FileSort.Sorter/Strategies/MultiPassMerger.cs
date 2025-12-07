@@ -26,30 +26,48 @@ internal sealed class MultiPassMerger : IMergeStrategy
         CancellationToken cancellationToken)
     {
         List<string> currentFiles = new(initialFiles);
+        List<string> intermediateFiles = new(); // Track all intermediate files for cleanup
         string tempDir = GetTempDirectory(initialFiles);
         int passNumber = 1;
 
         int totalPasses = CalculateTotalPasses(initialFiles.Count, _maxOpenFiles);
         ReportTotalPasses(totalPasses, progress);
 
-        while (currentFiles.Count > 1)
+        try
         {
-            ReportCurrentPass(passNumber, totalPasses, progress);
+            while (currentFiles.Count > 1)
+            {
+                ReportCurrentPass(passNumber, totalPasses, progress);
 
-            List<string> nextPassFiles = await ProcessMergePassAsync(
-                currentFiles,
-                tempDir,
-                passNumber,
-                progress,
-                cancellationToken);
+                List<string> nextPassFiles = await ProcessMergePassAsync(
+                    currentFiles,
+                    tempDir,
+                    passNumber,
+                    progress,
+                    cancellationToken);
 
-            CleanupPreviousPassFiles(currentFiles, passNumber);
+                // Track intermediate files for cleanup
+                if (passNumber > 1)
+                {
+                    intermediateFiles.AddRange(currentFiles);
+                }
 
-            currentFiles = nextPassFiles;
-            passNumber++;
+                CleanupPreviousPassFiles(currentFiles, passNumber);
+
+                currentFiles = nextPassFiles;
+                passNumber++;
+            }
+
+            await CopyFinalFileToOutputAsync(currentFiles, outputPath, cancellationToken);
         }
-
-        CopyFinalFileToOutput(currentFiles, outputPath);
+        finally
+        {
+            // Ensure cleanup of any remaining intermediate files on exception
+            if (intermediateFiles.Count > 0)
+            {
+                FileIoHelpers.SafeDeleteFiles(intermediateFiles);
+            }
+        }
     }
 
     private static string GetTempDirectory(IReadOnlyList<string> files)
@@ -153,7 +171,7 @@ internal sealed class MultiPassMerger : IMergeStrategy
     {
         if (batch.Count == 1)
         {
-            FileIoHelpers.CopyFile(batch[0], intermediateFile);
+            await FileIoHelpers.CopyFileAsync(batch[0], intermediateFile, cancellationToken: cancellationToken);
         }
         else
         {
@@ -171,11 +189,14 @@ internal sealed class MultiPassMerger : IMergeStrategy
         FileIoHelpers.SafeDeleteFiles(files);
     }
 
-    private static void CopyFinalFileToOutput(List<string> currentFiles, string outputPath)
+    private static async Task CopyFinalFileToOutputAsync(
+        List<string> currentFiles, 
+        string outputPath,
+        CancellationToken cancellationToken)
     {
         if (currentFiles.Count == 1)
         {
-            FileIoHelpers.CopyFile(currentFiles[0], outputPath);
+            await FileIoHelpers.CopyFileAsync(currentFiles[0], outputPath, cancellationToken: cancellationToken);
             FileIoHelpers.SafeDeleteFile(currentFiles[0]);
         }
     }

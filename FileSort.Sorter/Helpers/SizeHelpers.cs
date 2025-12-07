@@ -1,3 +1,4 @@
+using System.Text;
 using FileSort.Sorter.Configuration;
 
 namespace FileSort.Sorter.Helpers;
@@ -7,6 +8,8 @@ namespace FileSort.Sorter.Helpers;
 /// </summary>
 internal static class SizeHelpers
 {
+    private static readonly Encoding FileEncoding = Encoding.UTF8;
+
     public static long ConvertMegabytesToBytes(int megabytes)
     {
         return (long)megabytes * SortConstants.BytesPerMegabyte;
@@ -14,7 +17,7 @@ internal static class SizeHelpers
 
     public static long CalculateLineBytes(string line)
     {
-        return WriteBufferHelpers.FileEncoding.GetByteCount(line) + SortConstants.LineEndingBytes;
+        return WriteBufferHelpers.FileEncoding.GetByteCount(line) + FileEncoding.GetByteCount(Environment.NewLine);
     }
 
     public static long GetFileSize(string filePath)

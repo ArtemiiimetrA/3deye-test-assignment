@@ -1,6 +1,7 @@
 using FileSort.App.Commands;
 using FileSort.Generator;
 using FileSort.Sorter;
+using FileSort.Validator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.CommandLine;
@@ -10,6 +11,7 @@ var builder = Host.CreateApplicationBuilder(args);
 // Configure services using extension methods
 builder.Services.AddFileSortGenerator(builder.Configuration);
 builder.Services.AddFileSortSorter(builder.Configuration);
+builder.Services.AddFileSortValidator();
 
 var host = builder.Build();
 
@@ -19,6 +21,7 @@ var rootCommand = new RootCommand("FileSort - High-performance external merge so
 // Add commands
 rootCommand.AddCommand(GenerateCommand.Create(host));
 rootCommand.AddCommand(SortCommand.Create(host));
+rootCommand.AddCommand(ValidateCommand.Create(host));
 
 // Parse and execute
 await rootCommand.InvokeAsync(args);

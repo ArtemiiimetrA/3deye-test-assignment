@@ -27,7 +27,7 @@ public sealed class ExternalFileSorter : IExternalSorter
         long totalBytes = SizeHelpers.GetFileSize(request.InputFilePath);
 
         // Phase 1: Create sorted chunks
-        var coordinator = new ChunkCreationCoordinator(request, totalBytes, progress);
+        using var coordinator = new ChunkCreationCoordinator(request, totalBytes, progress);
         List<string> chunkFiles = await coordinator.ProcessAsync(cancellationToken);
 
         try

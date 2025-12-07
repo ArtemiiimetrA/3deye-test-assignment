@@ -24,11 +24,15 @@ internal static class WriteBufferHelpers
             return;
         }
 
-        // Write all lines efficiently
+        // Batch write all lines efficiently using StringBuilder
+        // Estimate average line length to pre-allocate StringBuilder capacity
+        var sb = new StringBuilder(writeBuffer.Count * 80); // Average line estimate
         foreach (string line in writeBuffer)
         {
-            await writer.WriteLineAsync(line);
+            sb.AppendLine(line);
         }
+        
+        await writer.WriteAsync(sb.ToString());
         writeBuffer.Clear();
     }
 

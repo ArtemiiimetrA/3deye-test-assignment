@@ -12,6 +12,7 @@
         <ProjectReference Include="..\FileSort.Generator\FileSort.Generator.csproj" />
         <ProjectReference Include="..\FileSort.Progress\FileSort.Progress.csproj" />
         <ProjectReference Include="..\FileSort.Sorter\FileSort.Sorter.csproj" />
+        <ProjectReference Include="..\FileSort.Validator\FileSort.Validator.csproj" />
     </ItemGroup>
 
     <ItemGroup>

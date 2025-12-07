@@ -32,7 +32,7 @@ internal sealed class MergeProcessor
                 await CreateEmptyOutputFile(outputFilePath);
                 return;
             case 1:
-                CopySingleFileToOutput(chunkFilePaths[0], outputFilePath);
+                await CopySingleFileToOutputAsync(chunkFilePaths[0], outputFilePath, cancellationToken);
                 return;
         }
 
@@ -59,8 +59,11 @@ internal sealed class MergeProcessor
         await File.Create(outputFilePath).DisposeAsync();
     }
 
-    private static void CopySingleFileToOutput(string sourceFile, string outputFile)
+    private static async Task CopySingleFileToOutputAsync(
+        string sourceFile, 
+        string outputFile,
+        CancellationToken cancellationToken)
     {
-        FileIoHelpers.CopyFile(sourceFile, outputFile);
+        await FileIoHelpers.CopyFileAsync(sourceFile, outputFile, cancellationToken: cancellationToken);
     }
 }
