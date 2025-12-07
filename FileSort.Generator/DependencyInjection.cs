@@ -1,6 +1,6 @@
 using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
-using FileSort.Generator.Helpers;
+using FileSort.Generator.Formatters;
 using FileSort.Generator.Options;
 using FileSort.Progress.Helpers;
 using FileSort.Progress.Interfaces;

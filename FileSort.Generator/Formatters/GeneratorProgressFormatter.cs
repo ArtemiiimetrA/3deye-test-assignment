@@ -1,6 +1,6 @@
 using FileSort.Core.Models;
 
-namespace FileSort.Generator.Helpers;
+namespace FileSort.Generator.Formatters;
 
 /// <summary>
 /// Formats generator progress information for display.

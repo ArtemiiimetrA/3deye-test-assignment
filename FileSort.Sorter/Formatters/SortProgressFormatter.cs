@@ -1,6 +1,6 @@
 using FileSort.Core.Models;
 
-namespace FileSort.Sorter.Helpers;
+namespace FileSort.Sorter.Formatters;
 
 /// <summary>
 /// Formats sort progress information for display.

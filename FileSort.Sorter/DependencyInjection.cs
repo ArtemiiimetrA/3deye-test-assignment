@@ -2,6 +2,7 @@ using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
 using FileSort.Progress.Helpers;
 using FileSort.Progress.Interfaces;
+using FileSort.Sorter.Formatters;
 using FileSort.Sorter.Helpers;
 using FileSort.Sorter.Options;
 using Microsoft.Extensions.Configuration;
@@ -23,11 +24,8 @@ public static class DependencyInjection
         services.AddSingleton<IExternalSorter, ExternalFileSorter>();
 
         // Register progress reporter factory for sort operations
-        services.AddSingleton<IProgressReporterFactory<SortProgress>>(sp =>
-        {
-            var logger = sp.GetRequiredService<ILogger<ExternalFileSorter>>();
-            return new ProgressReporterFactoryService<SortProgress>(SortProgressFormatter.Format);
-        });
+        services.AddSingleton<IProgressReporterFactory<SortProgress>>(_ =>
+            new ProgressReporterFactoryService<SortProgress>(SortProgressFormatter.Format));
 
         return services;
     }
