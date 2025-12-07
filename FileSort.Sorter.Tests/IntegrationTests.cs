@@ -1,37 +1,38 @@
-using FileSort.Core.Models;
 using FileSort.Core.Requests;
 using FileSort.Generator;
-using FileSort.Sorter;
 using Xunit;
 
 namespace FileSort.Sorter.Tests;
 
 public class IntegrationTests
 {
-    private static SortRequest CreateBaseSortRequest(string inputPath, string outputPath, string tempDir) => new SortRequest
+    private static SortRequest CreateBaseSortRequest(string inputPath, string outputPath, string tempDir)
     {
-        InputFilePath = inputPath,
-        OutputFilePath = outputPath,
-        TempDirectory = tempDir,
-        MaxRamMb = 100,
-        ChunkSizeMb = 1,
-        MaxDegreeOfParallelism = Environment.ProcessorCount,
-        FileChunkTemplate = "chunk_{0:0000}.tmp",
-        BufferSizeBytes = 4 * 1024 * 1024,
-        DeleteTempFiles = true,
-        MaxOpenFiles = 500,
-        MaxMergeParallelism = 2,
-        AdaptiveChunkSize = true,
-        MinChunkSizeMb = 64,
-        MaxChunkSizeMb = 512
-    };
+        return new SortRequest()
+        {
+            InputFilePath = inputPath,
+            OutputFilePath = outputPath,
+            TempDirectory = tempDir,
+            MaxRamMb = 100,
+            ChunkSizeMb = 1,
+            MaxDegreeOfParallelism = Environment.ProcessorCount,
+            FileChunkTemplate = "chunk_{0:0000}.tmp",
+            BufferSizeBytes = 4 * 1024 * 1024,
+            DeleteTempFiles = true,
+            MaxOpenFiles = 500,
+            MaxMergeParallelism = 2,
+            AdaptiveChunkSize = true,
+            MinChunkSizeMb = 64,
+            MaxChunkSizeMb = 512
+        };
+    }
 
     [Fact]
     public async Task EndToEnd_GenerateAndSort_ProducesSortedOutput()
     {
-        string inputPath = Path.GetTempFileName();
-        string outputPath = Path.GetTempFileName();
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var inputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         try
         {
@@ -78,7 +79,7 @@ public class IntegrationTests
             if (File.Exists(outputPath))
                 File.Delete(outputPath);
             if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, recursive: true);
+                Directory.Delete(tempDir, true);
         }
         catch
         {

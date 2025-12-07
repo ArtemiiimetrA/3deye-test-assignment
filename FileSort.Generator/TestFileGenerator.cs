@@ -1,8 +1,7 @@
-using FileSort.Core.Interfaces;
-using FileSort.Core.Models;
-using FileSort.Core.Requests;
 using System.Text;
+using FileSort.Core.Interfaces;
 using FileSort.Core.Models.Progress;
+using FileSort.Core.Requests;
 using FileSort.Generator.Validation;
 
 namespace FileSort.Generator;
@@ -29,7 +28,7 @@ public sealed class TestFileGenerator : ITestFileGenerator
 
         await using var writer = CreateFileWriter(request.OutputFilePath, request.BufferSizeBytes);
 
-        var writeBuffer = new List<string>(capacity: WriteBufferCapacity);
+        var writeBuffer = new List<string>(WriteBufferCapacity);
         long bytesWritten = 0;
         long linesWritten = 0;
 
@@ -65,11 +64,8 @@ public sealed class TestFileGenerator : ITestFileGenerator
 
     private static void EnsureOutputDirectoryExists(string filePath)
     {
-        string? directory = Path.GetDirectoryName(filePath);
-        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+        var directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory)) Directory.CreateDirectory(directory);
     }
 
     private static TextPool.TextPool CreateTextPool(GeneratorRequest request)
@@ -100,8 +96,8 @@ public sealed class TestFileGenerator : ITestFileGenerator
 
     private static string GenerateLine(Random random, TextPool.TextPool textPool, int minNumber, int maxNumber)
     {
-        int number = random.Next(minNumber, maxNumber + 1);
-        string text = textPool.GetNextText();
+        var number = random.Next(minNumber, maxNumber + 1);
+        var text = textPool.GetNextText();
         return $"{number}. {text}";
     }
 
@@ -117,7 +113,7 @@ public sealed class TestFileGenerator : ITestFileGenerator
         long targetBytes)
     {
         return writeBuffer.Count >= WriteBufferCapacity
-            || currentBytes + estimatedBytes >= targetBytes;
+               || currentBytes + estimatedBytes >= targetBytes;
     }
 
     private static bool HasReachedTarget(long bytesWritten, long targetBytes)
@@ -138,10 +134,10 @@ public sealed class TestFileGenerator : ITestFileGenerator
     {
         while (bytesWritten < request.TargetSizeBytes && !cancellationToken.IsCancellationRequested)
         {
-            string line = GenerateLine(random, textPool, request.MinNumber, request.MaxNumber);
+            var line = GenerateLine(random, textPool, request.MinNumber, request.MaxNumber);
             writeBuffer.Add(line);
 
-            long estimatedBytes = CalculateLineBytes(line);
+            var estimatedBytes = CalculateLineBytes(line);
 
             if (ShouldFlushBuffer(writeBuffer, bytesWritten, estimatedBytes, request.TargetSizeBytes))
             {
@@ -169,7 +165,7 @@ public sealed class TestFileGenerator : ITestFileGenerator
         long linesWritten,
         CancellationToken cancellationToken)
     {
-        foreach (string line in writeBuffer)
+        foreach (var line in writeBuffer)
         {
             cancellationToken.ThrowIfCancellationRequested();
             try
@@ -181,13 +177,14 @@ public sealed class TestFileGenerator : ITestFileGenerator
                 cancellationToken.ThrowIfCancellationRequested();
                 throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
             }
-            
-            long lineBytes = CalculateLineBytes(line);
+
+            var lineBytes = CalculateLineBytes(line);
             bytesWritten += lineBytes;
             linesWritten++;
         }
+
         writeBuffer.Clear();
-        
+
         return (bytesWritten, linesWritten);
     }
 
@@ -199,15 +196,13 @@ public sealed class TestFileGenerator : ITestFileGenerator
         CancellationToken cancellationToken)
     {
         if (writeBuffer.Count > 0)
-        {
             (bytesWritten, linesWritten) = await FlushWriteBufferAsync(
                 writeBuffer,
                 writer,
                 bytesWritten,
                 linesWritten,
                 cancellationToken);
-        }
-        
+
         return (bytesWritten, linesWritten);
     }
 

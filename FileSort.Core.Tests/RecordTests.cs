@@ -1,4 +1,3 @@
-using FileSort.Core.Models;
 using Xunit;
 using Record = FileSort.Core.Models.Record;
 
@@ -10,7 +9,7 @@ public class RecordTests
     public void ToLine_ValidRecord_ReturnsCorrectFormat()
     {
         var record = new Record(123, "Apple");
-        string line = record.ToLine();
+        var line = record.ToLine();
 
         Assert.Equal("123. Apple", line);
     }
@@ -23,7 +22,7 @@ public class RecordTests
     public void ToLine_VariousInputs_ReturnsCorrectFormat(int number, string text, string expected)
     {
         var record = new Record(number, text);
-        string line = record.ToLine();
+        var line = record.ToLine();
 
         Assert.Equal(expected, line);
     }
@@ -73,7 +72,7 @@ public class RecordTests
     {
         var record = new Record(123, "Apple");
 
-        Assert.False(record.Equals((object?)null));
+        Assert.False(record.Equals(null));
     }
 
     [Fact]
@@ -126,7 +125,7 @@ public class RecordTests
     public void ToLine_UnicodeCharacters_HandlesCorrectly()
     {
         var record = new Record(1, "Äpple");
-        string line = record.ToLine();
+        var line = record.ToLine();
 
         Assert.Equal("1. Äpple", line);
     }
@@ -135,7 +134,7 @@ public class RecordTests
     public void ToLine_SpecialCharacters_HandlesCorrectly()
     {
         var record = new Record(1, "File.name.txt");
-        string line = record.ToLine();
+        var line = record.ToLine();
 
         Assert.Equal("1. File.name.txt", line);
     }
@@ -144,9 +143,8 @@ public class RecordTests
     public void ToLine_EmptyText_HandlesCorrectly()
     {
         var record = new Record(1, "");
-        string line = record.ToLine();
+        var line = record.ToLine();
 
         Assert.Equal("1. ", line);
     }
 }
-

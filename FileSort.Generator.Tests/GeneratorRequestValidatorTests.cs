@@ -182,4 +182,3 @@ public class GeneratorRequestValidatorTests
         Assert.Null(exception);
     }
 }
-

@@ -1,5 +1,4 @@
 using FileSort.Core.Comparison;
-using FileSort.Core.Models;
 using Xunit;
 using Record = FileSort.Core.Models.Record;
 
@@ -18,7 +17,7 @@ public class RecordComparerTests
         var record1 = new Record(1, text1);
         var record2 = new Record(1, text2);
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.Equal(expected, result);
     }
@@ -29,7 +28,7 @@ public class RecordComparerTests
         var record1 = new Record(1, "apple");
         var record2 = new Record(1, "Apple");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.NotEqual(0, result);
     }
@@ -40,7 +39,7 @@ public class RecordComparerTests
         var record1 = new Record(1, "Apple");
         var record2 = new Record(2, "Apple");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.True(result < 0); // 1 < 2
     }
@@ -51,7 +50,7 @@ public class RecordComparerTests
         var record1 = new Record(123, "Test");
         var record2 = new Record(123, "Test");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.Equal(0, result);
     }
@@ -62,7 +61,7 @@ public class RecordComparerTests
         var record1 = new Record(1, "");
         var record2 = new Record(1, "A");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.True(result < 0); // Empty < "A"
     }
@@ -73,7 +72,7 @@ public class RecordComparerTests
         var record1 = new Record(1, "Äpple");
         var record2 = new Record(1, "Banana");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.NotEqual(0, result);
     }
@@ -84,7 +83,7 @@ public class RecordComparerTests
         var record1 = new Record(1, "File.name");
         var record2 = new Record(1, "File-name");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.NotEqual(0, result);
     }
@@ -92,12 +91,12 @@ public class RecordComparerTests
     [Fact]
     public void Compare_VeryLongText_HandlesCorrectly()
     {
-        string longText1 = new string('A', 10000);
-        string longText2 = new string('B', 10000);
+        var longText1 = new string('A', 10000);
+        var longText2 = new string('B', 10000);
         var record1 = new Record(1, longText1);
         var record2 = new Record(1, longText2);
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.True(result < 0);
     }
@@ -108,7 +107,7 @@ public class RecordComparerTests
         var record1 = new Record(int.MaxValue - 1, "Test");
         var record2 = new Record(int.MaxValue, "Test");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.True(result < 0);
     }
@@ -119,7 +118,7 @@ public class RecordComparerTests
         var record1 = new Record(0, "Test");
         var record2 = new Record(1, "Test");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.True(result < 0);
     }
@@ -130,7 +129,7 @@ public class RecordComparerTests
         var record1 = new Record(1, "   ");
         var record2 = new Record(1, "A");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.NotEqual(0, result);
     }
@@ -141,7 +140,7 @@ public class RecordComparerTests
         var record1 = new Record(1, " Apple");
         var record2 = new Record(1, "Apple");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.NotEqual(0, result); // Space before "Apple" is different
     }
@@ -164,7 +163,7 @@ public class RecordComparerTests
         var record1 = new Record(1, "1Text");
         var record2 = new Record(2, "2Text");
 
-        int result = _comparer.Compare(record1, record2);
+        var result = _comparer.Compare(record1, record2);
 
         Assert.True(result < 0); // "1Text" < "2Text" lexicographically
     }

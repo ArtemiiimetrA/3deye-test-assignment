@@ -1,8 +1,7 @@
 using FileSort.Core.Comparison;
 using FileSort.Core.Interfaces;
-using FileSort.Core.Models;
-using FileSort.Validator;
 using Xunit;
+using Record = FileSort.Core.Models.Record;
 
 namespace FileSort.Validator.Tests;
 
@@ -13,7 +12,7 @@ public class FileValidatorTests
     [Fact]
     public async Task ValidateAsync_ValidSortedFile_ReturnsValid()
     {
-        string filePath = await CreateTestFileAsync(new[]
+        var filePath = await CreateTestFileAsync(new[]
         {
             "1. Apple",
             "2. Apple",
@@ -42,11 +41,11 @@ public class FileValidatorTests
         // Create a file where line 3 is out of order
         // Sorted order should be: "1. Apple", "2. Apple", "1. Banana"
         // But we have: "1. Apple", "1. Banana", "2. Apple" (line 3 is out of order)
-        string filePath = await CreateTestFileAsync(new[]
+        var filePath = await CreateTestFileAsync(new[]
         {
             "1. Apple",
             "1. Banana",
-            "2. Apple"  // Out of order - "2. Apple" should come before "1. Banana"
+            "2. Apple" // Out of order - "2. Apple" should come before "1. Banana"
         });
 
         try
@@ -69,7 +68,7 @@ public class FileValidatorTests
     [Fact]
     public async Task ValidateAsync_EmptyFile_ReturnsValid()
     {
-        string filePath = await CreateTestFileAsync(Array.Empty<string>());
+        var filePath = await CreateTestFileAsync(Array.Empty<string>());
 
         try
         {
@@ -89,7 +88,7 @@ public class FileValidatorTests
     [Fact]
     public async Task ValidateAsync_SingleRecord_ReturnsValid()
     {
-        string filePath = await CreateTestFileAsync(new[] { "1. Apple" });
+        var filePath = await CreateTestFileAsync(new[] { "1. Apple" });
 
         try
         {
@@ -107,7 +106,7 @@ public class FileValidatorTests
     [Fact]
     public async Task ValidateAsync_InvalidRecordFormat_ReturnsInvalid()
     {
-        string filePath = await CreateTestFileAsync(new[]
+        var filePath = await CreateTestFileAsync(new[]
         {
             "1. Apple",
             "Invalid line",
@@ -134,7 +133,7 @@ public class FileValidatorTests
     [Fact]
     public async Task ValidateAsync_FileNotFound_ThrowsFileNotFoundException()
     {
-        string nonExistentPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".txt");
+        var nonExistentPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
 
         await Assert.ThrowsAsync<FileNotFoundException>(
             () => _validator.ValidateAsync(nonExistentPath));
@@ -154,16 +153,16 @@ public class FileValidatorTests
     public async Task ValidateAsync_UnicodeCharacters_HandlesCorrectly()
     {
         // Sort by Text (ordinal) then Number: "Banana" < "Çherry" < "Äpple" in ordinal comparison
-        var records = new List<Core.Models.Record>
+        var records = new List<Record>
         {
             new(2, "Banana"),
             new(1, "Çherry"),
             new(1, "Äpple")
         };
         records.Sort(RecordComparer.Instance);
-        
+
         var lines = records.Select(r => r.ToLine());
-        string filePath = await CreateTestFileAsync(lines);
+        var filePath = await CreateTestFileAsync(lines);
 
         try
         {
@@ -182,16 +181,16 @@ public class FileValidatorTests
     public async Task ValidateAsync_SpecialCharacters_HandlesCorrectly()
     {
         // Sort by Text (ordinal) then Number: "File-name.txt" < "File.name.txt" < "File_name.txt" in ordinal comparison
-        var records = new List<Core.Models.Record>
+        var records = new List<Record>
         {
             new(2, "File-name.txt"),
             new(1, "File.name.txt"),
             new(1, "File_name.txt")
         };
         records.Sort(RecordComparer.Instance);
-        
+
         var lines = records.Select(r => r.ToLine());
-        string filePath = await CreateTestFileAsync(lines);
+        var filePath = await CreateTestFileAsync(lines);
 
         try
         {
@@ -209,7 +208,7 @@ public class FileValidatorTests
     [Fact]
     public async Task ValidateAsync_StopsOnFirstError()
     {
-        string filePath = await CreateTestFileAsync(new[]
+        var filePath = await CreateTestFileAsync(new[]
         {
             "1. Apple",
             "2. Banana",
@@ -234,11 +233,11 @@ public class FileValidatorTests
     [Fact]
     public async Task ValidateAsync_StopsOnFirstOutOfOrder()
     {
-        string filePath = await CreateTestFileAsync(new[]
+        var filePath = await CreateTestFileAsync(new[]
         {
             "1. Apple",
             "2. Banana",
-            "1. Apple",  // Out of order
+            "1. Apple", // Out of order
             "3. Cherry"
         });
 
@@ -260,19 +259,16 @@ public class FileValidatorTests
     public async Task ValidateAsync_LargeFile_HandlesCorrectly()
     {
         // Generate records in sorted order: Text (ordinal) then Number (ascending)
-        var records = new List<Core.Models.Record>();
-        for (int i = 1; i <= 10000; i++)
-        {
-            records.Add(new Core.Models.Record(i % 100, $"Text{i}"));
-        }
-        
+        var records = new List<Record>();
+        for (var i = 1; i <= 10000; i++) records.Add(new Record(i % 100, $"Text{i}"));
+
         // Sort the records using the same comparer as the validator
         records.Sort(RecordComparer.Instance);
 
         // Convert to lines
         var lines = records.Select(r => r.ToLine());
 
-        string filePath = await CreateTestFileAsync(lines);
+        var filePath = await CreateTestFileAsync(lines);
 
         try
         {
@@ -290,7 +286,7 @@ public class FileValidatorTests
     [Fact]
     public async Task ValidateAsync_IdenticalRecords_HandlesCorrectly()
     {
-        string filePath = await CreateTestFileAsync(new[]
+        var filePath = await CreateTestFileAsync(new[]
         {
             "1. Apple",
             "1. Apple",
@@ -313,7 +309,7 @@ public class FileValidatorTests
     [Fact]
     public async Task ValidateAsync_ErrorContainsLineNumber()
     {
-        string filePath = await CreateTestFileAsync(new[]
+        var filePath = await CreateTestFileAsync(new[]
         {
             "1. Apple",
             "Invalid line"
@@ -335,7 +331,7 @@ public class FileValidatorTests
     [Fact]
     public async Task ValidateAsync_ErrorContainsLineContent()
     {
-        string filePath = await CreateTestFileAsync(new[]
+        var filePath = await CreateTestFileAsync(new[]
         {
             "1. Apple",
             "Invalid line"
@@ -356,9 +352,8 @@ public class FileValidatorTests
 
     private static async Task<string> CreateTestFileAsync(IEnumerable<string> lines)
     {
-        string path = Path.GetTempFileName();
+        var path = Path.GetTempFileName();
         await File.WriteAllLinesAsync(path, lines);
         return path;
     }
 }
-

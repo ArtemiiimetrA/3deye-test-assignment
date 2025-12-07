@@ -1,6 +1,5 @@
 using FileSort.Core.Parsing;
 using Xunit;
-using Record = FileSort.Core.Models.Record;
 
 namespace FileSort.Core.Tests;
 
@@ -14,7 +13,7 @@ public class RecordParserTests
     [InlineData("123. Very long text with many words", 123, "Very long text with many words")]
     public void TryParse_ValidFormats_ReturnsTrue(string line, int expectedNumber, string expectedText)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
         Assert.Equal(expectedNumber, record.Number);
@@ -27,7 +26,7 @@ public class RecordParserTests
     [InlineData("  123. Padded", 123, "Padded")]
     public void TryParse_WithWhitespace_TrimsCorrectly(string line, int expectedNumber, string expectedText)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
         Assert.Equal(expectedNumber, record.Number);
@@ -45,16 +44,16 @@ public class RecordParserTests
     [InlineData("-1. Test")]
     public void TryParse_InvalidFormats_ReturnsFalse(string? line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.False(result);
-        Assert.Equal(default(Record), record);
+        Assert.Equal(default, record);
     }
 
     [Fact]
     public void TryParse_EmptyTextAfterPeriod_ReturnsFalse()
     {
-        bool result = RecordParser.TryParse("123. ", out Record record);
+        var result = RecordParser.TryParse("123. ", out var record);
 
         Assert.False(result);
     }
@@ -65,7 +64,7 @@ public class RecordParserTests
     [InlineData("999999999. Test")]
     public void TryParse_VeryLargeNumbers_ReturnsTrue(string line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
     }
@@ -75,7 +74,7 @@ public class RecordParserTests
     [InlineData("000. Test", 0, "Test")]
     public void TryParse_NumbersWithLeadingZeros_ReturnsTrue(string line, int expectedNumber, string expectedText)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
         Assert.Equal(expectedNumber, record.Number);
@@ -89,7 +88,7 @@ public class RecordParserTests
     [InlineData("123. File\\path\\to\\file.txt")]
     public void TryParse_TextWithSpecialCharacters_ReturnsTrue(string line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
     }
@@ -100,7 +99,7 @@ public class RecordParserTests
     [InlineData("123. 测试")]
     public void TryParse_UnicodeCharacters_ReturnsTrue(string line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
     }
@@ -110,7 +109,7 @@ public class RecordParserTests
     [InlineData("123. Text with\ttab")]
     public void TryParse_TextWithControlCharacters_ReturnsTrue(string line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
     }
@@ -118,10 +117,10 @@ public class RecordParserTests
     [Fact]
     public void TryParse_VeryLongLine_ReturnsTrue()
     {
-        string longText = new string('A', 10000);
-        string line = $"123. {longText}";
+        var longText = new string('A', 10000);
+        var line = $"123. {longText}";
 
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
         Assert.Equal(longText, record.Text);
@@ -133,7 +132,7 @@ public class RecordParserTests
     [InlineData("123. Trailing spaces   ")]
     public void TryParse_TextWithMultipleSpaces_TrimsCorrectly(string line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
         // Text should be trimmed
@@ -146,7 +145,7 @@ public class RecordParserTests
     [InlineData("123.\t")]
     public void TryParse_NoTextAfterPeriod_ReturnsFalse(string line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.False(result);
     }
@@ -156,7 +155,7 @@ public class RecordParserTests
     [InlineData(" .Text")]
     public void TryParse_NoNumberBeforePeriod_ReturnsFalse(string line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.False(result);
     }
@@ -166,7 +165,7 @@ public class RecordParserTests
     [InlineData("123. Text. with. periods")]
     public void TryParse_MultiplePeriods_HandlesCorrectly(string line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
         // Should parse up to first period as number, rest as text
@@ -177,7 +176,7 @@ public class RecordParserTests
     [InlineData("-100. Test")]
     public void TryParse_NegativeNumbers_ReturnsFalse(string line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.False(result);
     }
@@ -188,7 +187,7 @@ public class RecordParserTests
     [InlineData("a12. Test")]
     public void TryParse_NonNumericPrefix_ReturnsFalse(string line)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.False(result);
     }
@@ -196,7 +195,7 @@ public class RecordParserTests
     [Fact]
     public void TryParse_WhitespaceOnlyLine_ReturnsFalse()
     {
-        bool result = RecordParser.TryParse("   ", out Record record);
+        var result = RecordParser.TryParse("   ", out var record);
 
         Assert.False(result);
     }
@@ -204,7 +203,7 @@ public class RecordParserTests
     [Fact]
     public void TryParse_OnlyPeriod_ReturnsFalse()
     {
-        bool result = RecordParser.TryParse(".", out Record record);
+        var result = RecordParser.TryParse(".", out var record);
 
         Assert.False(result);
     }
@@ -212,7 +211,7 @@ public class RecordParserTests
     [Fact]
     public void TryParse_OnlyNumber_ReturnsFalse()
     {
-        bool result = RecordParser.TryParse("123", out Record record);
+        var result = RecordParser.TryParse("123", out var record);
 
         Assert.False(result);
     }
@@ -220,16 +219,16 @@ public class RecordParserTests
     [Fact]
     public void TryParse_NumberWithDecimal_ReturnsFalse()
     {
-        bool result = RecordParser.TryParse("123.5. Test", out Record record);
+        var result = RecordParser.TryParse("123.5. Test", out var record);
 
         // This should fail because "123.5" is not a valid integer
         Assert.False(result);
     }
-    
+
     [Fact]
     public void TryParse_NumberWithCommaDecimal_ReturnsFalse()
     {
-        bool result = RecordParser.TryParse("123,5. Test", out Record record);
+        var result = RecordParser.TryParse("123,5. Test", out var record);
 
         // This should fail because "123.5" is not a valid integer
         Assert.False(result);
@@ -240,7 +239,7 @@ public class RecordParserTests
     [InlineData("\t123.\tTest\t", 123, "Test")]
     public void TryParse_WhitespaceAroundEverything_TrimsCorrectly(string line, int expectedNumber, string expectedText)
     {
-        bool result = RecordParser.TryParse(line, out Record record);
+        var result = RecordParser.TryParse(line, out var record);
 
         Assert.True(result);
         Assert.Equal(expectedNumber, record.Number);
@@ -250,7 +249,7 @@ public class RecordParserTests
     [Fact]
     public void TryParse_TextWithQuotes_HandlesCorrectly()
     {
-        bool result = RecordParser.TryParse("123. \"Quoted text\"", out Record record);
+        var result = RecordParser.TryParse("123. \"Quoted text\"", out var record);
 
         Assert.True(result);
         Assert.Equal("\"Quoted text\"", record.Text);
@@ -259,7 +258,7 @@ public class RecordParserTests
     [Fact]
     public void TryParse_TextWithBackslashes_HandlesCorrectly()
     {
-        bool result = RecordParser.TryParse("123. Path\\to\\file", out Record record);
+        var result = RecordParser.TryParse("123. Path\\to\\file", out var record);
 
         Assert.True(result);
         Assert.Equal("Path\\to\\file", record.Text);

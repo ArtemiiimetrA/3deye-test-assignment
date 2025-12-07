@@ -1,10 +1,9 @@
+using System.CommandLine;
 using FileSort.App.Commands;
 using FileSort.Generator;
 using FileSort.Sorter;
 using FileSort.Validator;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System.CommandLine;
 
 var builder = Host.CreateApplicationBuilder(args);
 

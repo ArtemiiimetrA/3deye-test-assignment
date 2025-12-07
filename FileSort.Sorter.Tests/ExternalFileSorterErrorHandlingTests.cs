@@ -1,6 +1,5 @@
 using FileSort.Core.Interfaces;
 using FileSort.Core.Requests;
-using FileSort.Sorter;
 using Xunit;
 
 namespace FileSort.Sorter.Tests;
@@ -9,30 +8,33 @@ public class ExternalFileSorterErrorHandlingTests
 {
     private readonly IExternalSorter _sorter = new ExternalFileSorter();
 
-    private static SortRequest CreateBaseRequest(string inputPath, string outputPath, string tempDir) => new SortRequest
+    private static SortRequest CreateBaseRequest(string inputPath, string outputPath, string tempDir)
     {
-        InputFilePath = inputPath,
-        OutputFilePath = outputPath,
-        TempDirectory = tempDir,
-        MaxRamMb = 100,
-        ChunkSizeMb = 10,
-        MaxDegreeOfParallelism = 4,
-        FileChunkTemplate = "chunk_{0}.tmp",
-        BufferSizeBytes = 4096,
-        DeleteTempFiles = true,
-        MaxOpenFiles = 500,
-        MaxMergeParallelism = 2,
-        AdaptiveChunkSize = false,
-        MinChunkSizeMb = 64,
-        MaxChunkSizeMb = 512
-    };
+        return new SortRequest()
+        {
+            InputFilePath = inputPath,
+            OutputFilePath = outputPath,
+            TempDirectory = tempDir,
+            MaxRamMb = 100,
+            ChunkSizeMb = 10,
+            MaxDegreeOfParallelism = 4,
+            FileChunkTemplate = "chunk_{0}.tmp",
+            BufferSizeBytes = 4096,
+            DeleteTempFiles = true,
+            MaxOpenFiles = 500,
+            MaxMergeParallelism = 2,
+            AdaptiveChunkSize = false,
+            MinChunkSizeMb = 64,
+            MaxChunkSizeMb = 512
+        };
+    }
 
     [Fact]
     public async Task SortAsync_NonExistentInputFile_ThrowsFileNotFoundException()
     {
-        string nonExistentPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".txt");
-        string outputPath = Path.GetTempFileName();
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var nonExistentPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt");
+        var outputPath = Path.GetTempFileName();
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         try
         {
@@ -46,15 +48,15 @@ public class ExternalFileSorterErrorHandlingTests
             if (File.Exists(outputPath))
                 File.Delete(outputPath);
             if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, recursive: true);
+                Directory.Delete(tempDir, true);
         }
     }
 
     [Fact]
     public async Task SortAsync_InvalidInputPath_ThrowsArgumentException()
     {
-        string outputPath = Path.GetTempFileName();
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var outputPath = Path.GetTempFileName();
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         try
         {
@@ -68,21 +70,21 @@ public class ExternalFileSorterErrorHandlingTests
             if (File.Exists(outputPath))
                 File.Delete(outputPath);
             if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, recursive: true);
+                Directory.Delete(tempDir, true);
         }
     }
 
     [Fact]
     public async Task SortAsync_FileWithInvalidLines_HandlesGracefully()
     {
-        string inputPath = await TestHelpers.CreateTestFileAsync(new[]
+        var inputPath = await TestHelpers.CreateTestFileAsync(new[]
         {
             "1. Apple",
             "Invalid line",
             "2. Banana"
         });
-        string outputPath = Path.GetTempFileName();
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var outputPath = Path.GetTempFileName();
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         try
         {
@@ -111,9 +113,9 @@ public class ExternalFileSorterErrorHandlingTests
     [Fact]
     public async Task SortAsync_EmptyFile_CreatesEmptyOutput()
     {
-        string inputPath = await TestHelpers.CreateTestFileAsync(Array.Empty<string>());
-        string outputPath = Path.GetTempFileName();
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var inputPath = await TestHelpers.CreateTestFileAsync(Array.Empty<string>());
+        var outputPath = Path.GetTempFileName();
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         try
         {
@@ -128,7 +130,7 @@ public class ExternalFileSorterErrorHandlingTests
             await _sorter.SortAsync(request);
 
             Assert.True(File.Exists(outputPath));
-            string[] lines = await File.ReadAllLinesAsync(outputPath);
+            var lines = await File.ReadAllLinesAsync(outputPath);
             Assert.Empty(lines);
         }
         finally
@@ -148,9 +150,9 @@ public class ExternalFileSorterErrorHandlingTests
             "2. Banana"
         };
 
-        string inputPath = await TestHelpers.CreateTestFileAsync(sortedLines);
-        string outputPath = Path.GetTempFileName();
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var inputPath = await TestHelpers.CreateTestFileAsync(sortedLines);
+        var outputPath = Path.GetTempFileName();
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         try
         {
@@ -185,9 +187,9 @@ public class ExternalFileSorterErrorHandlingTests
             "1. Apple"
         };
 
-        string inputPath = await TestHelpers.CreateTestFileAsync(reverseSortedLines);
-        string outputPath = Path.GetTempFileName();
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var inputPath = await TestHelpers.CreateTestFileAsync(reverseSortedLines);
+        var outputPath = Path.GetTempFileName();
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         try
         {
@@ -223,9 +225,9 @@ public class ExternalFileSorterErrorHandlingTests
             "1. Apple"
         };
 
-        string inputPath = await TestHelpers.CreateTestFileAsync(identicalLines);
-        string outputPath = Path.GetTempFileName();
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var inputPath = await TestHelpers.CreateTestFileAsync(identicalLines);
+        var outputPath = Path.GetTempFileName();
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
 
         try
         {
@@ -258,7 +260,7 @@ public class ExternalFileSorterErrorHandlingTests
             if (File.Exists(outputPath))
                 File.Delete(outputPath);
             if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, recursive: true);
+                Directory.Delete(tempDir, true);
         }
         catch
         {
@@ -266,4 +268,3 @@ public class ExternalFileSorterErrorHandlingTests
         }
     }
 }
-

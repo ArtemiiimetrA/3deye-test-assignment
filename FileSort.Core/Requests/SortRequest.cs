@@ -1,8 +1,8 @@
 namespace FileSort.Core.Requests;
 
 /// <summary>
-/// Data Transfer Object for file sorting requests.
-/// Contains runtime parameters merged from configuration and command-line arguments.
+///     Data Transfer Object for file sorting requests.
+///     Contains runtime parameters merged from configuration and command-line arguments.
 /// </summary>
 public sealed record SortRequest
 {
@@ -21,4 +21,3 @@ public sealed record SortRequest
     public int MinChunkSizeMb { get; init; }
     public int MaxChunkSizeMb { get; init; }
 }
-

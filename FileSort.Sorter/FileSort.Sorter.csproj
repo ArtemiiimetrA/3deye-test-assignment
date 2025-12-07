@@ -13,12 +13,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\FileSort.Core\FileSort.Core.csproj" />
-        <ProjectReference Include="..\FileSort.Progress\FileSort.Progress.csproj" />
+        <ProjectReference Include="..\FileSort.Core\FileSort.Core.csproj"/>
+        <ProjectReference Include="..\FileSort.Progress\FileSort.Progress.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0"/>
     </ItemGroup>
 
 </Project>

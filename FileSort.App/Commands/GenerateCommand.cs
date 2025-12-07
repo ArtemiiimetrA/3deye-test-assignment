@@ -1,5 +1,6 @@
+using System.CommandLine;
 using FileSort.Core.Interfaces;
-using FileSort.Core.Models;
+using FileSort.Core.Models.Progress;
 using FileSort.Core.Requests;
 using FileSort.Generator.Options;
 using FileSort.Progress.Interfaces;
@@ -7,8 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.CommandLine;
-using FileSort.Core.Models.Progress;
 
 namespace FileSort.App.Commands;
 
@@ -17,7 +16,7 @@ public static class GenerateCommand
     public static Command Create(IHost host)
     {
         var command = new Command("generate", "Generate a test file");
-        
+
         var outputOption = new Option<string?>("--output", "Output file path");
         var sizeOption = new Option<long?>("--size", "Target size in bytes");
         var duplicatesOption = new Option<int?>("--duplicates", "Duplicate ratio percentage (0-100)");
@@ -28,7 +27,7 @@ public static class GenerateCommand
         command.AddOption(duplicatesOption);
         command.AddOption(seedOption);
 
-        command.SetHandler(async (string? output, long? size, int? duplicates, int? seed) =>
+        command.SetHandler(async (output, size, duplicates, seed) =>
         {
             using var scope = host.Services.CreateScope();
             var serviceProvider = scope.ServiceProvider;
@@ -39,7 +38,9 @@ public static class GenerateCommand
 
             var request = new GeneratorRequest
             {
-                OutputFilePath = output ?? baseOptions.OutputFilePath ?? throw new InvalidOperationException("OutputFilePath must be specified either in configuration or via --output option"),
+                OutputFilePath = output ?? baseOptions.OutputFilePath ??
+                    throw new InvalidOperationException(
+                        "OutputFilePath must be specified either in configuration or via --output option"),
                 TargetSizeBytes = size ?? baseOptions.TargetSizeBytes,
                 MinNumber = baseOptions.MinNumber,
                 MaxNumber = baseOptions.MaxNumber,
@@ -49,11 +50,11 @@ public static class GenerateCommand
                 MaxWordsPerString = baseOptions.MaxWordsPerString
             };
 
-            logger.LogInformation("Generating test file: {OutputPath}, Target size: {Size} bytes", request.OutputFilePath, request.TargetSizeBytes);
+            logger.LogInformation("Generating test file: {OutputPath}, Target size: {Size} bytes",
+                request.OutputFilePath, request.TargetSizeBytes);
 
             var progress = progressFactory.CreateConsoleReporter(
-                shouldReport: p => p.LinesWritten % 100000 == 0 || p.BytesWritten >= p.TargetBytes,
-                showInline: true);
+                p => p.LinesWritten % 100000 == 0 || p.BytesWritten >= p.TargetBytes);
 
             try
             {
@@ -71,4 +72,3 @@ public static class GenerateCommand
         return command;
     }
 }
-

@@ -1,7 +1,7 @@
 namespace FileSort.Core.Models;
 
 /// <summary>
-/// Represents a parsed record from the input file.
+///     Represents a parsed record from the input file.
 /// </summary>
 public readonly struct Record : IEquatable<Record>
 {
@@ -15,13 +15,25 @@ public readonly struct Record : IEquatable<Record>
     }
 
     /// <summary>
-    /// Reconstructs the original line format: "{Number}. {Text}"
+    ///     Reconstructs the original line format: "{Number}. {Text}"
     /// </summary>
-    public string ToLine() => $"{Number}. {Text}";
+    public string ToLine()
+    {
+        return $"{Number}. {Text}";
+    }
 
-    public bool Equals(Record other) => Number == other.Number && Text == other.Text;
+    public bool Equals(Record other)
+    {
+        return Number == other.Number && Text == other.Text;
+    }
 
-    public override bool Equals(object? obj) => obj is Record other && Equals(other);
+    public override bool Equals(object? obj)
+    {
+        return obj is Record other && Equals(other);
+    }
 
-    public override int GetHashCode() => HashCode.Combine(Number, Text);
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Number, Text);
+    }
 }

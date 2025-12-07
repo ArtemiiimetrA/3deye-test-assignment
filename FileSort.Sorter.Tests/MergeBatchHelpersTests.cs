@@ -11,7 +11,7 @@ public class MergeBatchHelpersTests
     [InlineData(500, 499)]
     public void CalculateBatchSize_ReservesOneForOutput(int maxOpenFiles, int expectedBatchSize)
     {
-        int result = MergeBatchHelpers.CalculateBatchSize(maxOpenFiles);
+        var result = MergeBatchHelpers.CalculateBatchSize(maxOpenFiles);
         Assert.Equal(expectedBatchSize, result);
     }
 
@@ -22,7 +22,7 @@ public class MergeBatchHelpersTests
     [InlineData(24, 5, 5)]
     public void CalculateTotalBatches_ReturnsCorrectCount(int fileCount, int batchSize, int expectedBatches)
     {
-        int result = MergeBatchHelpers.CalculateTotalBatches(fileCount, batchSize);
+        var result = MergeBatchHelpers.CalculateTotalBatches(fileCount, batchSize);
         Assert.Equal(expectedBatches, result);
     }
 
@@ -30,8 +30,8 @@ public class MergeBatchHelpersTests
     public void GetBatch_ReturnsCorrectBatch()
     {
         var files = new List<string> { "file1", "file2", "file3", "file4", "file5" };
-        int startIndex = 1;
-        int batchSize = 2;
+        var startIndex = 1;
+        var batchSize = 2;
 
         var batch = MergeBatchHelpers.GetBatch(files, startIndex, batchSize);
 
@@ -44,8 +44,8 @@ public class MergeBatchHelpersTests
     public void GetBatch_LastBatch_ReturnsRemainingFiles()
     {
         var files = new List<string> { "file1", "file2", "file3" };
-        int startIndex = 2;
-        int batchSize = 5; // Larger than remaining
+        var startIndex = 2;
+        var batchSize = 5; // Larger than remaining
 
         var batch = MergeBatchHelpers.GetBatch(files, startIndex, batchSize);
 
@@ -61,8 +61,7 @@ public class MergeBatchHelpersTests
     [InlineData(1000, 10, 4)] // Requires 4 passes
     public void CalculateTotalPasses_ReturnsCorrectPassCount(int fileCount, int maxOpenFiles, int expectedPasses)
     {
-        int result = MergeBatchHelpers.CalculateTotalPasses(fileCount, maxOpenFiles);
+        var result = MergeBatchHelpers.CalculateTotalPasses(fileCount, maxOpenFiles);
         Assert.Equal(expectedPasses, result);
     }
 }
-

@@ -1,14 +1,11 @@
 using FileSort.Core.Interfaces;
-using FileSort.Core.Models;
 using FileSort.Core.Models.Progress;
 using FileSort.Progress.Helpers;
 using FileSort.Progress.Interfaces;
 using FileSort.Sorter.Formatters;
-using FileSort.Sorter.Helpers;
 using FileSort.Sorter.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace FileSort.Sorter;
 

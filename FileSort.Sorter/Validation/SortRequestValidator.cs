@@ -3,7 +3,7 @@ using FileSort.Core.Requests;
 namespace FileSort.Sorter.Validation;
 
 /// <summary>
-/// Validates SortRequest parameters before processing.
+///     Validates SortRequest parameters before processing.
 /// </summary>
 internal static class SortRequestValidator
 {
@@ -45,4 +45,3 @@ internal static class SortRequestValidator
             throw new ArgumentException("MinChunkSizeMb cannot exceed MaxChunkSizeMb.", nameof(request));
     }
 }
-

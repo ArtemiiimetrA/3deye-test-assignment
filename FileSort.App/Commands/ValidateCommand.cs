@@ -1,8 +1,8 @@
+using System.CommandLine;
 using FileSort.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.CommandLine;
 
 namespace FileSort.App.Commands;
 
@@ -13,13 +13,13 @@ public static class ValidateCommand
     public static Command Create(IHost host)
     {
         var command = new Command("validate", "Validate that a sorted file is properly sorted");
-        
+
         var fileOption = new Option<string?>("--file", "Path to the file to validate (default: sorted.txt)");
         fileOption.SetDefaultValue("sorted.txt");
 
         command.AddOption(fileOption);
 
-        command.SetHandler(async (string? file) =>
+        command.SetHandler(async file =>
         {
             using var scope = host.Services.CreateScope();
             var serviceProvider = scope.ServiceProvider;
@@ -37,12 +37,15 @@ public static class ValidateCommand
                 if (result.IsValid)
                 {
                     Console.WriteLine($"✓ File is valid. Total records: {result.TotalRecords:N0}");
-                    logger.LogInformation("Validation completed successfully. Total records: {TotalRecords}", result.TotalRecords);
+                    logger.LogInformation("Validation completed successfully. Total records: {TotalRecords}",
+                        result.TotalRecords);
                 }
                 else
                 {
-                    Console.WriteLine($"✗ File is invalid. Found {result.InvalidRecords:N0} invalid record(s) out of {result.TotalRecords:N0} total records.");
-                    logger.LogWarning("Validation failed. Invalid records: {InvalidRecords}/{TotalRecords}", result.InvalidRecords, result.TotalRecords);
+                    Console.WriteLine(
+                        $"✗ File is invalid. Found {result.InvalidRecords:N0} invalid record(s) out of {result.TotalRecords:N0} total records.");
+                    logger.LogWarning("Validation failed. Invalid records: {InvalidRecords}/{TotalRecords}",
+                        result.InvalidRecords, result.TotalRecords);
 
                     // Show first {ErrorsCount} errors
                     var errorsToShow = result.Errors.Take(ErrorsCount).ToList();
@@ -54,9 +57,7 @@ public static class ValidateCommand
                     }
 
                     if (result.Errors.Count > ErrorsCount)
-                    {
                         Console.WriteLine($"  ... and {result.Errors.Count - ErrorsCount} more error(s)");
-                    }
 
                     Environment.Exit(1);
                 }
@@ -78,4 +79,3 @@ public static class ValidateCommand
         return command;
     }
 }
-

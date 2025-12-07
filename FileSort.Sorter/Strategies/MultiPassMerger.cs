@@ -1,21 +1,19 @@
-using FileSort.Core.Models;
 using FileSort.Core.Models.Progress;
 using FileSort.Sorter.Helpers;
-using FileSort.Sorter.Configuration;
 
 namespace FileSort.Sorter.Strategies;
 
 /// <summary>
-/// Performs k-way merge using cascading multi-pass strategy.
-/// Files are merged in batches when they exceed the maximum open file limit.
-/// Supports parallel batch processing to improve performance.
+///     Performs k-way merge using cascading multi-pass strategy.
+///     Files are merged in batches when they exceed the maximum open file limit.
+///     Supports parallel batch processing to improve performance.
 /// </summary>
 internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
 {
-    private readonly int _maxOpenFiles;
-    private readonly SinglePassMerger _singlePassMerger;
     private readonly int _maxMergeParallelism;
+    private readonly int _maxOpenFiles;
     private readonly SemaphoreSlim _semaphore;
+    private readonly SinglePassMerger _singlePassMerger;
 
     public MultiPassMerger(int maxOpenFiles, int bufferSize, int maxMergeParallelism)
     {
@@ -23,6 +21,11 @@ internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
         _singlePassMerger = new SinglePassMerger(bufferSize);
         _maxMergeParallelism = maxMergeParallelism;
         _semaphore = new SemaphoreSlim(maxMergeParallelism);
+    }
+
+    public void Dispose()
+    {
+        _semaphore?.Dispose();
     }
 
     public async Task MergeAsync(
@@ -33,10 +36,10 @@ internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
     {
         List<string> currentFiles = new(initialFiles);
         List<string> intermediateFiles = new(); // Track all intermediate files for cleanup
-        string tempDir = GetTempDirectory(initialFiles);
-        int passNumber = 1;
+        var tempDir = GetTempDirectory(initialFiles);
+        var passNumber = 1;
 
-        int totalPasses = CalculateTotalPasses(initialFiles.Count, _maxOpenFiles);
+        var totalPasses = MergeBatchHelpers.CalculateTotalPasses(initialFiles.Count, _maxOpenFiles);
         ReportTotalPasses(totalPasses, progress);
 
         try
@@ -45,7 +48,7 @@ internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
             {
                 ReportCurrentPass(passNumber, totalPasses, progress);
 
-                List<string> nextPassFiles = await ProcessMergePassAsync(
+                var nextPassFiles = await ProcessMergePassAsync(
                     currentFiles,
                     tempDir,
                     passNumber,
@@ -53,10 +56,7 @@ internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
                     cancellationToken);
 
                 // Track intermediate files for cleanup
-                if (passNumber > 1)
-                {
-                    intermediateFiles.AddRange(currentFiles);
-                }
+                if (passNumber > 1) intermediateFiles.AddRange(currentFiles);
 
                 CleanupPreviousPassFiles(currentFiles, passNumber);
 
@@ -69,20 +69,15 @@ internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
         finally
         {
             // Ensure cleanup of any remaining intermediate files on exception
-            if (intermediateFiles.Count > 0)
-            {
-                FileIoHelpers.SafeDeleteFiles(intermediateFiles);
-            }
+            if (intermediateFiles.Count > 0) FileIOHelpers.SafeDeleteFiles(intermediateFiles);
         }
     }
 
     private static string GetTempDirectory(IReadOnlyList<string> files)
     {
-        string? directory = Path.GetDirectoryName(files[0]);
+        var directory = Path.GetDirectoryName(files[0]);
         if (string.IsNullOrWhiteSpace(directory))
-        {
             throw new InvalidOperationException($"Cannot determine temp directory from file path: {files[0]}");
-        }
         return directory;
     }
 
@@ -113,17 +108,17 @@ internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
         IProgress<SortProgress>? progress,
         CancellationToken cancellationToken)
     {
-        int batchSize = CalculateBatchSize();
-        int totalBatches = CalculateTotalBatches(currentFiles.Count, batchSize);
+        var batchSize = MergeBatchHelpers.CalculateBatchSize(_maxOpenFiles);
+        var totalBatches = MergeBatchHelpers.CalculateTotalBatches(currentFiles.Count, batchSize);
         var batchTasks = new List<Task<string>>();
 
-        for (int i = 0; i < currentFiles.Count; i += batchSize)
+        for (var i = 0; i < currentFiles.Count; i += batchSize)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            int batchIndex = i / batchSize;
-            var batch = GetBatch(currentFiles, i, batchSize);
-            string intermediateFile = GenerateIntermediateFilePath(tempDir, passNumber, batchIndex);
+            var batchIndex = i / batchSize;
+            var batch = MergeBatchHelpers.GetBatch(currentFiles, i, batchSize);
+            var intermediateFile = FileIOHelpers.GenerateIntermediateFilePath(tempDir, passNumber, batchIndex);
 
             var task = ProcessBatchWithSemaphoreAsync(
                 batch,
@@ -137,8 +132,8 @@ internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
             batchTasks.Add(task);
         }
 
-        string[] nextPassFiles = await Task.WhenAll(batchTasks);
-        return new List<string>(nextPassFiles);
+        var nextPassFiles = await Task.WhenAll(batchTasks);
+        return nextPassFiles.ToList();
     }
 
     private async Task<string> ProcessBatchWithSemaphoreAsync(
@@ -156,8 +151,7 @@ internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
         }
         catch (TaskCanceledException)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+            CancellationHelpers.HandleCancellation(cancellationToken);
         }
 
         try
@@ -170,21 +164,6 @@ internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
         {
             _semaphore.Release();
         }
-    }
-
-    private int CalculateBatchSize()
-    {
-        return MergeBatchHelpers.CalculateBatchSize(_maxOpenFiles);
-    }
-
-    private static int CalculateTotalBatches(int fileCount, int batchSize)
-    {
-        return MergeBatchHelpers.CalculateTotalBatches(fileCount, batchSize);
-    }
-
-    private static List<string> GetBatch(List<string> files, int startIndex, int batchSize)
-    {
-        return MergeBatchHelpers.GetBatch(files, startIndex, batchSize);
     }
 
     private static void ReportBatchProgress(
@@ -202,56 +181,33 @@ internal sealed class MultiPassMerger : IMergeStrategy, IDisposable
         });
     }
 
-    private static string GenerateIntermediateFilePath(string tempDir, int passNumber, int batchIndex)
-    {
-        return FileIoHelpers.GenerateIntermediateFilePath(tempDir, passNumber, batchIndex);
-    }
-
     private async Task MergeBatchAsync(
         List<string> batch,
         string intermediateFile,
         CancellationToken cancellationToken)
     {
         if (batch.Count == 1)
-        {
-            await FileIoHelpers.CopyFileAsync(batch[0], intermediateFile, cancellationToken: cancellationToken);
-        }
+            await FileIOHelpers.CopyFileAsync(batch[0], intermediateFile, cancellationToken: cancellationToken);
         else
-        {
             await _singlePassMerger.MergeAsync(batch, intermediateFile, null, cancellationToken);
-        }
     }
 
     private static void CleanupPreviousPassFiles(List<string> files, int passNumber)
     {
-        if (passNumber <= 1)
-        {
-            return; // Don't delete initial chunks
-        }
+        if (passNumber <= 1) return; // Don't delete initial chunks
 
-        FileIoHelpers.SafeDeleteFiles(files);
+        FileIOHelpers.SafeDeleteFiles(files);
     }
 
     private static async Task CopyFinalFileToOutputAsync(
-        List<string> currentFiles, 
+        List<string> currentFiles,
         string outputPath,
         CancellationToken cancellationToken)
     {
         if (currentFiles.Count == 1)
         {
-            await FileIoHelpers.CopyFileAsync(currentFiles[0], outputPath, cancellationToken: cancellationToken);
-            FileIoHelpers.SafeDeleteFile(currentFiles[0]);
+            await FileIOHelpers.CopyFileAsync(currentFiles[0], outputPath, cancellationToken: cancellationToken);
+            FileIOHelpers.SafeDeleteFile(currentFiles[0]);
         }
     }
-
-    private static int CalculateTotalPasses(int fileCount, int maxOpenFiles)
-    {
-        return MergeBatchHelpers.CalculateTotalPasses(fileCount, maxOpenFiles);
-    }
-
-    public void Dispose()
-    {
-        _semaphore?.Dispose();
-    }
 }
-

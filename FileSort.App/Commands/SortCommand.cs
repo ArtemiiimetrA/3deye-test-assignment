@@ -1,5 +1,6 @@
+using System.CommandLine;
 using FileSort.Core.Interfaces;
-using FileSort.Core.Models;
+using FileSort.Core.Models.Progress;
 using FileSort.Core.Requests;
 using FileSort.Progress.Interfaces;
 using FileSort.Sorter.Options;
@@ -7,8 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.CommandLine;
-using FileSort.Core.Models.Progress;
 
 namespace FileSort.App.Commands;
 
@@ -17,7 +16,7 @@ public static class SortCommand
     public static Command Create(IHost host)
     {
         var command = new Command("sort", "Sort a file");
-        
+
         var inputOption = new Option<string?>("--input", "Input file path");
         var sortOutputOption = new Option<string?>("--output", "Output file path");
         var chunkSizeOption = new Option<int?>("--chunk-size", "Chunk size in MB");
@@ -26,7 +25,7 @@ public static class SortCommand
         command.AddOption(sortOutputOption);
         command.AddOption(chunkSizeOption);
 
-        command.SetHandler(async (string? input, string? output, int? chunkSize) =>
+        command.SetHandler(async (input, output, chunkSize) =>
         {
             using var scope = host.Services.CreateScope();
             var serviceProvider = scope.ServiceProvider;
@@ -37,13 +36,20 @@ public static class SortCommand
 
             var request = new SortRequest
             {
-                InputFilePath = input ?? baseOptions.InputFilePath ?? throw new InvalidOperationException("InputFilePath must be specified either in configuration or via --input option"),
-                OutputFilePath = output ?? baseOptions.OutputFilePath ?? throw new InvalidOperationException("OutputFilePath must be specified either in configuration or via --output option"),
-                TempDirectory = baseOptions.TempDirectory ?? throw new InvalidOperationException("TempDirectory must be specified in configuration"),
+                InputFilePath = input ?? baseOptions.InputFilePath ??
+                    throw new InvalidOperationException(
+                        "InputFilePath must be specified either in configuration or via --input option"),
+                OutputFilePath = output ?? baseOptions.OutputFilePath ??
+                    throw new InvalidOperationException(
+                        "OutputFilePath must be specified either in configuration or via --output option"),
+                TempDirectory = baseOptions.TempDirectory ??
+                                throw new InvalidOperationException("TempDirectory must be specified in configuration"),
                 MaxRamMb = baseOptions.MaxRamMb,
                 ChunkSizeMb = chunkSize ?? baseOptions.ChunkSizeMb,
                 MaxDegreeOfParallelism = baseOptions.MaxDegreeOfParallelism,
-                FileChunkTemplate = baseOptions.FileChunkTemplate ?? throw new InvalidOperationException("FileChunkTemplate must be specified in configuration"),
+                FileChunkTemplate = baseOptions.FileChunkTemplate ??
+                                    throw new InvalidOperationException(
+                                        "FileChunkTemplate must be specified in configuration"),
                 BufferSizeBytes = baseOptions.BufferSizeBytes,
                 DeleteTempFiles = baseOptions.DeleteTempFiles,
                 MaxOpenFiles = baseOptions.MaxOpenFiles,
@@ -53,11 +59,11 @@ public static class SortCommand
                 MaxChunkSizeMb = baseOptions.MaxChunkSizeMb
             };
 
-            logger.LogInformation("Sorting file: {InputPath} -> {OutputPath}", request.InputFilePath, request.OutputFilePath);
+            logger.LogInformation("Sorting file: {InputPath} -> {OutputPath}", request.InputFilePath,
+                request.OutputFilePath);
 
             var progress = progressFactory.CreateConsoleReporter(
-                shouldReport: p => p.ChunksCreated > 0 || p.ChunksMerged > 0 || p.CurrentMergePass.HasValue,
-                showInline: true);
+                p => p.ChunksCreated > 0 || p.ChunksMerged > 0 || p.CurrentMergePass.HasValue);
 
             try
             {
@@ -74,4 +80,3 @@ public static class SortCommand
         return command;
     }
 }
-

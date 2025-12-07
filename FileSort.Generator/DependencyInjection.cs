@@ -1,5 +1,4 @@
 using FileSort.Core.Interfaces;
-using FileSort.Core.Models;
 using FileSort.Core.Models.Progress;
 using FileSort.Generator.Formatters;
 using FileSort.Generator.Options;

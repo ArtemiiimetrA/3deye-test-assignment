@@ -1,8 +1,8 @@
 namespace FileSort.Core.Models;
 
 /// <summary>
-/// Key for priority queue comparison in k-way merge.
-/// Implements comparison logic: Text (ordinal) then Number (ascending).
+///     Key for priority queue comparison in k-way merge.
+///     Implements comparison logic: Text (ordinal) then Number (ascending).
 /// </summary>
 public readonly struct RecordKey : IComparable<RecordKey>
 {
@@ -18,7 +18,7 @@ public readonly struct RecordKey : IComparable<RecordKey>
     public int CompareTo(RecordKey other)
     {
         // Primary: Text comparison (ordinal, case-sensitive)
-        int textComparison = string.Compare(Text, other.Text, StringComparison.Ordinal);
+        var textComparison = string.Compare(Text, other.Text, StringComparison.Ordinal);
         if (textComparison != 0)
             return textComparison;
 

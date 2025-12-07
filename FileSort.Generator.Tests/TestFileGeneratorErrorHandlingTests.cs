@@ -11,8 +11,8 @@ public class TestFileGeneratorErrorHandlingTests
     [Fact]
     public async Task GenerateAsync_NonExistentDirectory_CreatesDirectory()
     {
-        string nonExistentDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-        string outputPath = Path.Combine(nonExistentDir, "output.txt");
+        var nonExistentDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var outputPath = Path.Combine(nonExistentDir, "output.txt");
 
         try
         {
@@ -44,7 +44,7 @@ public class TestFileGeneratorErrorHandlingTests
     [Fact]
     public async Task GenerateAsync_ExistingFile_Overwrites()
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         File.WriteAllText(outputPath, "Old content");
 
         try
@@ -63,7 +63,7 @@ public class TestFileGeneratorErrorHandlingTests
             await _generator.GenerateAsync(request);
 
             Assert.True(File.Exists(outputPath));
-            string content = await File.ReadAllTextAsync(outputPath);
+            var content = await File.ReadAllTextAsync(outputPath);
             Assert.DoesNotContain("Old content", content);
         }
         finally
@@ -79,7 +79,7 @@ public class TestFileGeneratorErrorHandlingTests
     [InlineData(100)]
     public async Task GenerateAsync_VariousDuplicateRatios_GeneratesFile(int duplicateRatio)
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         try
         {
             var request = new GeneratorRequest
@@ -108,7 +108,7 @@ public class TestFileGeneratorErrorHandlingTests
     [Fact]
     public async Task GenerateAsync_MinNumberEqualsMaxNumber_GeneratesFile()
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         try
         {
             var request = new GeneratorRequest
@@ -136,7 +136,7 @@ public class TestFileGeneratorErrorHandlingTests
     [Fact]
     public async Task GenerateAsync_VerySmallTargetSize_GeneratesFile()
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         try
         {
             var request = new GeneratorRequest
@@ -163,4 +163,3 @@ public class TestFileGeneratorErrorHandlingTests
         }
     }
 }
-

@@ -1,5 +1,4 @@
 using FileSort.Core.Interfaces;
-using FileSort.Core.Models;
 using FileSort.Core.Models.Progress;
 using FileSort.Core.Parsing;
 using FileSort.Core.Requests;
@@ -14,7 +13,7 @@ public class TestFileGeneratorTests
     [Fact]
     public async Task GenerateAsync_SmallFile_GeneratesValidFile()
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         try
         {
             var request = new GeneratorRequest
@@ -34,13 +33,10 @@ public class TestFileGeneratorTests
             Assert.True(new FileInfo(outputPath).Length >= request.TargetSizeBytes);
 
             // Verify file format
-            string[] lines = await File.ReadAllLinesAsync(outputPath);
+            var lines = await File.ReadAllLinesAsync(outputPath);
             Assert.NotEmpty(lines);
 
-            foreach (string line in lines)
-            {
-                Assert.True(RecordParser.TryParse(line, out _), $"Invalid line format: {line}");
-            }
+            foreach (var line in lines) Assert.True(RecordParser.TryParse(line, out _), $"Invalid line format: {line}");
         }
         finally
         {
@@ -52,8 +48,8 @@ public class TestFileGeneratorTests
     [Fact]
     public async Task GenerateAsync_WithSeed_ProducesDeterministicOutput()
     {
-        string outputPath1 = Path.GetTempFileName();
-        string outputPath2 = Path.GetTempFileName();
+        var outputPath1 = Path.GetTempFileName();
+        var outputPath2 = Path.GetTempFileName();
         try
         {
             var request1 = new GeneratorRequest
@@ -81,8 +77,8 @@ public class TestFileGeneratorTests
             await _generator.GenerateAsync(request1);
             await _generator.GenerateAsync(request2);
 
-            byte[] file1 = await File.ReadAllBytesAsync(outputPath1);
-            byte[] file2 = await File.ReadAllBytesAsync(outputPath2);
+            var file1 = await File.ReadAllBytesAsync(outputPath1);
+            var file2 = await File.ReadAllBytesAsync(outputPath2);
 
             Assert.Equal(file1, file2);
         }
@@ -98,7 +94,7 @@ public class TestFileGeneratorTests
     [Fact]
     public async Task GenerateAsync_ReportsProgress()
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         try
         {
             var request = new GeneratorRequest

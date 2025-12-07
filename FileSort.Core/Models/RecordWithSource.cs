@@ -1,7 +1,7 @@
 namespace FileSort.Core.Models;
 
 /// <summary>
-/// Record with source file index for k-way merge tracking.
+///     Record with source file index for k-way merge tracking.
 /// </summary>
 public readonly struct RecordWithSource
 {

@@ -1,4 +1,3 @@
-using FileSort.Core.Models;
 using FileSort.Core.Models.Progress;
 using FileSort.Sorter.Helpers;
 using FileSort.Sorter.Strategies;
@@ -6,14 +5,14 @@ using FileSort.Sorter.Strategies;
 namespace FileSort.Sorter.Processors;
 
 /// <summary>
-/// Coordinates merge operations, selecting the appropriate merge strategy
-/// based on the number of files and system constraints.
+///     Coordinates merge operations, selecting the appropriate merge strategy
+///     based on the number of files and system constraints.
 /// </summary>
 internal sealed class MergeProcessor
 {
-    private readonly int _maxOpenFiles;
     private readonly int _bufferSize;
     private readonly int _maxMergeParallelism;
+    private readonly int _maxOpenFiles;
 
     public MergeProcessor(int maxOpenFiles, int bufferSize, int maxMergeParallelism)
     {
@@ -40,7 +39,7 @@ internal sealed class MergeProcessor
         }
 
         // Use Strategy pattern - factory selects the appropriate strategy
-        IMergeStrategy strategy = MergeStrategyFactory.CreateStrategy(
+        var strategy = MergeStrategyFactory.CreateStrategy(
             chunkFilePaths.Count,
             _maxOpenFiles,
             _bufferSize,
@@ -57,28 +56,22 @@ internal sealed class MergeProcessor
         finally
         {
             // Dispose strategy if it implements IDisposable (e.g., MultiPassMerger with SemaphoreSlim)
-            if (strategy is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
+            if (strategy is IDisposable disposable) disposable.Dispose();
         }
     }
 
     private static async Task CreateEmptyOutputFile(string outputFilePath)
     {
-        string? directory = Path.GetDirectoryName(outputFilePath);
-        if (!string.IsNullOrWhiteSpace(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+        var directory = Path.GetDirectoryName(outputFilePath);
+        if (!string.IsNullOrWhiteSpace(directory)) Directory.CreateDirectory(directory);
         await File.Create(outputFilePath).DisposeAsync();
     }
 
     private static async Task CopySingleFileToOutputAsync(
-        string sourceFile, 
+        string sourceFile,
         string outputFile,
         CancellationToken cancellationToken)
     {
-        await FileIoHelpers.CopyFileAsync(sourceFile, outputFile, cancellationToken: cancellationToken);
+        await FileIOHelpers.CopyFileAsync(sourceFile, outputFile, cancellationToken: cancellationToken);
     }
 }

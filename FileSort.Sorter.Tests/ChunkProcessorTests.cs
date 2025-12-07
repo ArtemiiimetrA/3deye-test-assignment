@@ -1,4 +1,3 @@
-using FileSort.Core.Models;
 using FileSort.Sorter.Processors;
 using Xunit;
 using Record = FileSort.Core.Models.Record;
@@ -17,19 +16,19 @@ public class ChunkProcessorTests
             new(2, "Cherry")
         };
 
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
-        string chunkTemplate = "chunk_{0}.tmp";
+        var chunkTemplate = "chunk_{0}.tmp";
 
         try
         {
             var processor = new ChunkProcessor();
-            string chunkPath = await processor.ProcessChunkAsync(
+            var chunkPath = await processor.ProcessChunkAsync(
                 records,
                 tempDir,
                 chunkTemplate,
-                chunkIndex: 0,
-                bufferSize: 4096,
+                0,
+                4096,
                 CancellationToken.None);
 
             Assert.True(File.Exists(chunkPath));
@@ -40,7 +39,7 @@ public class ChunkProcessorTests
         finally
         {
             if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, recursive: true);
+                Directory.Delete(tempDir, true);
         }
     }
 
@@ -48,18 +47,18 @@ public class ChunkProcessorTests
     public async Task ProcessChunkAsync_EmptyRecords_CreatesEmptyFile()
     {
         var records = new List<Record>();
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
         {
             var processor = new ChunkProcessor();
-            string chunkPath = await processor.ProcessChunkAsync(
+            var chunkPath = await processor.ProcessChunkAsync(
                 records,
                 tempDir,
                 "chunk_{0}.tmp",
-                chunkIndex: 0,
-                bufferSize: 4096,
+                0,
+                4096,
                 CancellationToken.None);
 
             Assert.True(File.Exists(chunkPath));
@@ -69,7 +68,7 @@ public class ChunkProcessorTests
         finally
         {
             if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, recursive: true);
+                Directory.Delete(tempDir, true);
         }
     }
 
@@ -80,7 +79,7 @@ public class ChunkProcessorTests
             .Select(i => new Record(i, $"Test{i}"))
             .ToList();
 
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
@@ -94,14 +93,14 @@ public class ChunkProcessorTests
                     records,
                     tempDir,
                     "chunk_{0}.tmp",
-                    chunkIndex: 0,
-                    bufferSize: 4096,
+                    0,
+                    4096,
                     cts.Token));
         }
         finally
         {
             if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, recursive: true);
+                Directory.Delete(tempDir, true);
         }
     }
 
@@ -112,18 +111,18 @@ public class ChunkProcessorTests
             .Select(i => new Record(i % 1000, $"Test{i}"))
             .ToList();
 
-        string tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(tempDir);
 
         try
         {
             var processor = new ChunkProcessor();
-            string chunkPath = await processor.ProcessChunkAsync(
+            var chunkPath = await processor.ProcessChunkAsync(
                 records,
                 tempDir,
                 "chunk_{0}.tmp",
-                chunkIndex: 0,
-                bufferSize: 4096,
+                0,
+                4096,
                 CancellationToken.None);
 
             var outputRecords = await TestHelpers.ReadRecordsFromFileAsync(chunkPath);
@@ -133,8 +132,7 @@ public class ChunkProcessorTests
         finally
         {
             if (Directory.Exists(tempDir))
-                Directory.Delete(tempDir, recursive: true);
+                Directory.Delete(tempDir, true);
         }
     }
 }
-

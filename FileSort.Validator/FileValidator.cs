@@ -1,15 +1,15 @@
+using System.Text;
 using FileSort.Core.Comparison;
 using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
 using FileSort.Core.Parsing;
-using System.Text;
 
 namespace FileSort.Validator;
 
 /// <summary>
-/// Validates that a file is properly sorted according to the Record comparison rules.
-/// Uses streaming to handle files of any size without loading them into memory.
-/// Exits immediately on the first comparison error for performance.
+///     Validates that a file is properly sorted according to the Record comparison rules.
+///     Uses streaming to handle files of any size without loading them into memory.
+///     Exits immediately on the first comparison error for performance.
 /// </summary>
 public class FileValidator : IFileValidator
 {
@@ -31,8 +31,9 @@ public class FileValidator : IFileValidator
         Record? previousRecord = null;
         long lineNumber = 0;
 
-        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, DefaultBufferSize, useAsync: true);
-        using var reader = new StreamReader(fileStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: DefaultBufferSize);
+        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+            DefaultBufferSize, true);
+        using var reader = new StreamReader(fileStream, Encoding.UTF8, true, DefaultBufferSize);
 
         string? previousLine = null;
         string? line;
@@ -78,7 +79,7 @@ public class FileValidator : IFileValidator
             previousLine = line;
         }
 
-        bool isValid = invalidRecords == 0;
+        var isValid = invalidRecords == 0;
         return new ValidationResult(isValid, totalRecords, invalidRecords, errors);
     }
 }

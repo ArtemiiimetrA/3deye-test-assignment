@@ -5,15 +5,16 @@ using Microsoft.Extensions.Logging;
 namespace FileSort.Progress.Helpers;
 
 /// <summary>
-/// Service implementation of progress reporter factory.
+///     Service implementation of progress reporter factory.
 /// </summary>
-public sealed class ProgressReporterFactoryService<TProgress> : IProgressReporterFactory<TProgress> where TProgress : class
+public sealed class ProgressReporterFactoryService<TProgress> : IProgressReporterFactory<TProgress>
+    where TProgress : class
 {
     private readonly Func<TProgress, string> _formatter;
     private readonly ILogger? _logger;
 
     /// <summary>
-    /// Creates a factory service for console reporters.
+    ///     Creates a factory service for console reporters.
     /// </summary>
     public ProgressReporterFactoryService(Func<TProgress, string> formatter)
     {
@@ -21,7 +22,7 @@ public sealed class ProgressReporterFactoryService<TProgress> : IProgressReporte
     }
 
     /// <summary>
-    /// Creates a factory service for logger reporters.
+    ///     Creates a factory service for logger reporters.
     /// </summary>
     public ProgressReporterFactoryService(Func<TProgress, string> formatter, ILogger logger)
     {
@@ -42,9 +43,9 @@ public sealed class ProgressReporterFactoryService<TProgress> : IProgressReporte
         Func<TProgress, bool>? shouldReport = null)
     {
         if (_logger == null)
-            throw new InvalidOperationException("Logger is required for logger-based reporters. Use the constructor with ILogger parameter.");
+            throw new InvalidOperationException(
+                "Logger is required for logger-based reporters. Use the constructor with ILogger parameter.");
 
         return ProgressReporter<TProgress>.CreateLogger(_logger, _formatter, shouldReport);
     }
 }
-

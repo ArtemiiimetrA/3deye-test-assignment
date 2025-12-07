@@ -1,5 +1,4 @@
 using FileSort.Core.Interfaces;
-using FileSort.Core.Models;
 using FileSort.Core.Models.Progress;
 using FileSort.Core.Requests;
 using FileSort.Sorter.Coordinators;
@@ -10,9 +9,9 @@ using FileSort.Sorter.Validation;
 namespace FileSort.Sorter;
 
 /// <summary>
-/// External merge sort implementation that handles very large files by:
-/// 1. Chunking: Reading chunks, sorting in memory, writing to temp files
-/// 2. Merging: K-way merge of sorted chunks (single-pass or multi-pass cascading)
+///     External merge sort implementation that handles very large files by:
+///     1. Chunking: Reading chunks, sorting in memory, writing to temp files
+///     2. Merging: K-way merge of sorted chunks (single-pass or multi-pass cascading)
 /// </summary>
 public sealed class ExternalFileSorter : IExternalSorter
 {
@@ -24,16 +23,17 @@ public sealed class ExternalFileSorter : IExternalSorter
     {
         cancellationToken.ThrowIfCancellationRequested();
         SortRequestValidator.Validate(request);
-        FileIoHelpers.EnsureDirectoryExists(request.TempDirectory);
+        FileIOHelpers.EnsureDirectoryExists(request.TempDirectory);
 
-        long totalBytes = SizeHelpers.GetFileSize(request.InputFilePath);
-
-        // Phase 1: Create sorted chunks
-        using var coordinator = new ChunkCreationCoordinator(request, totalBytes, progress);
-        List<string> chunkFiles = await coordinator.ProcessAsync(cancellationToken);
+        var totalBytes = SizeHelpers.GetFileSize(request.InputFilePath);
+        List<string> chunkFiles = new();
 
         try
         {
+            // Phase 1: Create sorted chunks
+            using var coordinator = new ChunkCreationCoordinator(request, totalBytes, progress);
+            chunkFiles = await coordinator.ProcessAsync(cancellationToken);
+
             // Phase 2: Merge chunks
             await MergeChunksAsync(request, chunkFiles, progress, cancellationToken);
         }
@@ -49,17 +49,15 @@ public sealed class ExternalFileSorter : IExternalSorter
         IProgress<SortProgress>? progress,
         CancellationToken cancellationToken)
     {
-        var mergeProcessor = new MergeProcessor(request.MaxOpenFiles, request.BufferSizeBytes, request.MaxMergeParallelism);
+        var mergeProcessor =
+            new MergeProcessor(request.MaxOpenFiles, request.BufferSizeBytes, request.MaxMergeParallelism);
         await mergeProcessor.MergeChunksAsync(chunkFiles, request.OutputFilePath, progress, cancellationToken);
     }
 
     private static void CleanupTempFiles(List<string> chunkFiles, bool deleteTempFiles)
     {
-        if (!deleteTempFiles)
-        {
-            return;
-        }
+        if (!deleteTempFiles) return;
 
-        FileIoHelpers.SafeDeleteFiles(chunkFiles);
+        FileIOHelpers.SafeDeleteFiles(chunkFiles);
     }
 }

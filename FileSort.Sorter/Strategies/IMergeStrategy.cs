@@ -1,20 +1,19 @@
-using FileSort.Core.Models;
 using FileSort.Core.Models.Progress;
 
 namespace FileSort.Sorter.Strategies;
 
 /// <summary>
-/// Defines the contract for merge strategies.
+///     Defines the contract for merge strategies.
 /// </summary>
 /// <remarks>
-/// Different strategies are used based on system constraints:
-/// - SinglePass: When file count ≤ maxOpenFiles (all files can be opened simultaneously)
-/// - MultiPass: When file count > maxOpenFiles (requires cascading merge passes)
+///     Different strategies are used based on system constraints:
+///     - SinglePass: When file count ≤ maxOpenFiles (all files can be opened simultaneously)
+///     - MultiPass: When file count > maxOpenFiles (requires cascading merge passes)
 /// </remarks>
 internal interface IMergeStrategy
 {
     /// <summary>
-    /// Merges sorted files into a single output file.
+    ///     Merges sorted files into a single output file.
     /// </summary>
     /// <param name="filePaths">Paths to the sorted input files to merge</param>
     /// <param name="outputPath">Path where the merged output file will be written</param>
@@ -26,4 +25,3 @@ internal interface IMergeStrategy
         IProgress<SortProgress>? progress,
         CancellationToken cancellationToken);
 }
-

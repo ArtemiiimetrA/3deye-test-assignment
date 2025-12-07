@@ -1,14 +1,14 @@
 using FileSort.Core.Models;
 using FileSort.Core.Models.Progress;
 using FileSort.Core.Parsing;
-using FileSort.Sorter.Helpers;
 using FileSort.Sorter.Configuration;
+using FileSort.Sorter.Helpers;
 
 namespace FileSort.Sorter.Strategies;
 
 /// <summary>
-/// Performs k-way merge of sorted files in a single pass.
-/// All input files are opened simultaneously and merged using a priority queue.
+///     Performs k-way merge of sorted files in a single pass.
+///     All input files are opened simultaneously and merged using a priority queue.
 /// </summary>
 internal sealed class SinglePassMerger : IMergeStrategy
 {
@@ -32,7 +32,7 @@ internal sealed class SinglePassMerger : IMergeStrategy
         {
             await InitializeReadersAsync(filePaths, readers, priorityQueue, cancellationToken);
 
-            await using var writer = FileIoHelpers.CreateFileWriter(outputPath, _bufferSize);
+            await using var writer = FileIOHelpers.CreateFileWriter(outputPath, _bufferSize);
 
             await MergeRecordsAsync(
                 readers,
@@ -53,11 +53,11 @@ internal sealed class SinglePassMerger : IMergeStrategy
         PriorityQueue<RecordWithSource, RecordKey> priorityQueue,
         CancellationToken cancellationToken)
     {
-        for (int i = 0; i < filePaths.Count; i++)
+        for (var i = 0; i < filePaths.Count; i++)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            StreamReader reader = FileIoHelpers.CreateFileReader(filePaths[i], _bufferSize);
+            var reader = FileIOHelpers.CreateFileReader(filePaths[i], _bufferSize);
             readers[i] = reader;
 
             await TryReadAndEnqueueRecordAsync(reader, i, priorityQueue, cancellationToken);
@@ -71,8 +71,8 @@ internal sealed class SinglePassMerger : IMergeStrategy
         IProgress<SortProgress>? progress,
         CancellationToken cancellationToken)
     {
-        var writeBuffer = new List<string>(capacity: SortConstants.WriteBufferCapacity);
-        int recordsWritten = 0;
+        var writeBuffer = new List<string>(SortConstants.WriteBufferCapacity);
+        var recordsWritten = 0;
 
         while (priorityQueue.Count > 0)
         {
@@ -85,14 +85,12 @@ internal sealed class SinglePassMerger : IMergeStrategy
             await TryReadNextRecordAsync(readers, sourceIndex, priorityQueue, cancellationToken);
 
             if (WriteBufferHelpers.ShouldFlushBuffer(writeBuffer))
-            {
                 await WriteBufferHelpers.FlushWriteBufferAsync(writeBuffer, writer);
-            }
 
             SortProgressReporter.ReportMergeProgress(recordsWritten, progress);
         }
 
-        await WriteBufferHelpers.FlushRemainingLinesAsync(writeBuffer, writer);
+        await WriteBufferHelpers.FlushWriteBufferAsync(writeBuffer, writer);
         await writer.FlushAsync(cancellationToken);
     }
 
@@ -102,17 +100,11 @@ internal sealed class SinglePassMerger : IMergeStrategy
         PriorityQueue<RecordWithSource, RecordKey> priorityQueue,
         CancellationToken cancellationToken)
     {
-        StreamReader? reader = readers[sourceIndex];
-        if (reader == null)
-        {
-            return;
-        }
+        var reader = readers[sourceIndex];
+        if (reader == null) return;
 
-        bool success = await TryReadAndEnqueueRecordAsync(reader, sourceIndex, priorityQueue, cancellationToken);
-        if (!success)
-        {
-            CloseReader(readers, sourceIndex);
-        }
+        var success = await TryReadAndEnqueueRecordAsync(reader, sourceIndex, priorityQueue, cancellationToken);
+        if (!success) CloseReader(readers, sourceIndex);
     }
 
     private static async Task<bool> TryReadAndEnqueueRecordAsync(
@@ -128,17 +120,17 @@ internal sealed class SinglePassMerger : IMergeStrategy
         }
         catch (TaskCanceledException)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            throw new OperationCanceledException("Operation was cancelled.", cancellationToken);
+            CancellationHelpers.HandleCancellation(cancellationToken);
+            line = null; // Unreachable, but satisfies compiler
         }
-        
-        if (line != null && RecordParser.TryParse(line, out Record record))
+
+        if (line != null && RecordParser.TryParse(line, out var record))
         {
             var key = new RecordKey(record.Text, record.Number);
             priorityQueue.Enqueue(new RecordWithSource(record, fileIndex), key);
             return true;
         }
-        
+
         return false;
     }
 
@@ -148,22 +140,24 @@ internal sealed class SinglePassMerger : IMergeStrategy
         readers[index] = null;
     }
 
+    /// <summary>
+    ///     Safely disposes all readers, ignoring any errors that occur during disposal.
+    /// </summary>
+    /// <param name="readers">Array of readers to dispose.</param>
+    /// <remarks>
+    ///     Exceptions are silently swallowed to ensure disposal failures don't prevent cleanup of other readers.
+    /// </remarks>
     private static void DisposeReaders(StreamReader?[] readers)
     {
         foreach (var reader in readers)
-        {
             if (reader != null)
-            {
                 try
                 {
                     reader.Dispose();
                 }
                 catch
                 {
-                    // Ignore disposal errors
+                    // Ignore disposal errors - failures on one reader shouldn't prevent cleanup of others
                 }
-            }
-        }
     }
 }
-

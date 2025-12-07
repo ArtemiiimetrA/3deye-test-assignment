@@ -1,5 +1,4 @@
 using FileSort.Core.Interfaces;
-using FileSort.Core.Models;
 using FileSort.Core.Models.Progress;
 using FileSort.Core.Requests;
 using Xunit;
@@ -14,7 +13,7 @@ public class TestFileGeneratorProgressTests
     [Fact]
     public async Task GenerateAsync_ReportsProgress()
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         try
         {
             var progressReports = new List<GeneratorProgress>();
@@ -46,7 +45,7 @@ public class TestFileGeneratorProgressTests
     [Fact]
     public async Task GenerateAsync_NullProgress_DoesNotThrow()
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         try
         {
             var request = new GeneratorRequest
@@ -60,7 +59,7 @@ public class TestFileGeneratorProgressTests
                 Seed = 42
             };
 
-            var exception = await Record.ExceptionAsync(() => _generator.GenerateAsync(request, null));
+            var exception = await Record.ExceptionAsync(() => _generator.GenerateAsync(request));
             Assert.Null(exception);
         }
         finally
@@ -73,7 +72,7 @@ public class TestFileGeneratorProgressTests
     [Fact]
     public async Task GenerateAsync_ProgressValuesAreAccurate()
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         try
         {
             var progressReports = new List<GeneratorProgress>();
@@ -93,10 +92,8 @@ public class TestFileGeneratorProgressTests
             await _generator.GenerateAsync(request, progress);
 
             // Progress should be increasing
-            for (int i = 1; i < progressReports.Count; i++)
-            {
+            for (var i = 1; i < progressReports.Count; i++)
                 Assert.True(progressReports[i].BytesWritten >= progressReports[i - 1].BytesWritten);
-            }
 
             // Final progress should be close to target
             var finalProgress = progressReports.Last();
@@ -110,4 +107,3 @@ public class TestFileGeneratorProgressTests
         }
     }
 }
-

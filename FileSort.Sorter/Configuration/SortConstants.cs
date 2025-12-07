@@ -1,7 +1,9 @@
+using System.Text;
+
 namespace FileSort.Sorter.Configuration;
 
 /// <summary>
-/// Constants used throughout the sorting process.
+///     Constants used throughout the sorting process.
 /// </summary>
 internal static class SortConstants
 {
@@ -10,5 +12,10 @@ internal static class SortConstants
     public const int ProgressReportIntervalBytes = 10 * BytesPerMegabyte; // Report progress every 10MB
     public const int ProgressReportIntervalRecords = 100000; // Report progress every 100k records
     public const int WriteBufferCapacity = 10000; // Buffer capacity for writing records
-}
+    public const int DefaultCopyBufferSize = 81920; // Default buffer size for file copy operations (80KB)
 
+    /// <summary>
+    ///     The encoding used for all file I/O operations.
+    /// </summary>
+    public static readonly Encoding FileEncoding = Encoding.UTF8;
+}

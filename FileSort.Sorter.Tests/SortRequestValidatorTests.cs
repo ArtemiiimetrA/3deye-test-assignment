@@ -8,28 +8,31 @@ public class SortRequestValidatorTests
 {
     private static string CreateTempFile()
     {
-        string path = Path.GetTempFileName();
+        var path = Path.GetTempFileName();
         File.WriteAllText(path, "1. Test");
         return path;
     }
 
-    private static SortRequest CreateBaseRequest(string inputPath) => new SortRequest
+    private static SortRequest CreateBaseRequest(string inputPath)
     {
-        InputFilePath = inputPath,
-        OutputFilePath = "output.txt",
-        TempDirectory = Path.GetTempPath(),
-        MaxRamMb = 100,
-        ChunkSizeMb = 10,
-        MaxDegreeOfParallelism = 4,
-        FileChunkTemplate = "chunk_{0}.tmp",
-        BufferSizeBytes = 4096,
-        DeleteTempFiles = true,
-        MaxOpenFiles = 500,
-        MaxMergeParallelism = 2,
-        AdaptiveChunkSize = false,
-        MinChunkSizeMb = 64,
-        MaxChunkSizeMb = 512
-    };
+        return new SortRequest()
+        {
+            InputFilePath = inputPath,
+            OutputFilePath = "output.txt",
+            TempDirectory = Path.GetTempPath(),
+            MaxRamMb = 100,
+            ChunkSizeMb = 10,
+            MaxDegreeOfParallelism = 4,
+            FileChunkTemplate = "chunk_{0}.tmp",
+            BufferSizeBytes = 4096,
+            DeleteTempFiles = true,
+            MaxOpenFiles = 500,
+            MaxMergeParallelism = 2,
+            AdaptiveChunkSize = false,
+            MinChunkSizeMb = 64,
+            MaxChunkSizeMb = 512
+        };
+    }
 
     [Fact]
     public void Validate_NullRequest_ThrowsArgumentNullException()
@@ -43,7 +46,7 @@ public class SortRequestValidatorTests
     [InlineData("   ")]
     public void Validate_InvalidInputFilePath_ThrowsArgumentException(string? inputPath)
     {
-        string tempFile = CreateTempFile();
+        var tempFile = CreateTempFile();
         try
         {
             var request = CreateBaseRequest(inputPath!);
@@ -60,7 +63,7 @@ public class SortRequestValidatorTests
     [Fact]
     public void Validate_NonExistentInputFile_ThrowsFileNotFoundException()
     {
-        var request = CreateBaseRequest(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".txt"));
+        var request = CreateBaseRequest(Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".txt"));
 
         Assert.Throws<FileNotFoundException>(() => SortRequestValidator.Validate(request));
     }
@@ -71,7 +74,7 @@ public class SortRequestValidatorTests
     [InlineData("   ")]
     public void Validate_InvalidOutputFilePath_ThrowsArgumentException(string? outputPath)
     {
-        string tempFile = CreateTempFile();
+        var tempFile = CreateTempFile();
         try
         {
             var request = CreateBaseRequest(tempFile) with
@@ -94,7 +97,7 @@ public class SortRequestValidatorTests
     [InlineData(-100)]
     public void Validate_InvalidChunkSizeMb_ThrowsArgumentException(int chunkSize)
     {
-        string tempFile = CreateTempFile();
+        var tempFile = CreateTempFile();
         try
         {
             var request = CreateBaseRequest(tempFile) with
@@ -114,7 +117,7 @@ public class SortRequestValidatorTests
     [Fact]
     public void Validate_ChunkSizeExceedsMaxRam_ThrowsArgumentException()
     {
-        string tempFile = CreateTempFile();
+        var tempFile = CreateTempFile();
         try
         {
             var request = CreateBaseRequest(tempFile) with
@@ -137,7 +140,7 @@ public class SortRequestValidatorTests
     [InlineData(-100)]
     public void Validate_InvalidMaxRamMb_ThrowsArgumentException(int maxRam)
     {
-        string tempFile = CreateTempFile();
+        var tempFile = CreateTempFile();
         try
         {
             var request = CreateBaseRequest(tempFile) with
@@ -160,7 +163,7 @@ public class SortRequestValidatorTests
     [InlineData(-100)]
     public void Validate_InvalidMaxDegreeOfParallelism_ThrowsArgumentException(int parallelism)
     {
-        string tempFile = CreateTempFile();
+        var tempFile = CreateTempFile();
         try
         {
             var request = CreateBaseRequest(tempFile) with
@@ -183,7 +186,7 @@ public class SortRequestValidatorTests
     [InlineData(-100)]
     public void Validate_InvalidBufferSizeBytes_ThrowsArgumentException(int bufferSize)
     {
-        string tempFile = CreateTempFile();
+        var tempFile = CreateTempFile();
         try
         {
             var request = CreateBaseRequest(tempFile) with
@@ -206,7 +209,7 @@ public class SortRequestValidatorTests
     [InlineData(-1)]
     public void Validate_InvalidMaxOpenFiles_ThrowsArgumentException(int maxOpenFiles)
     {
-        string tempFile = CreateTempFile();
+        var tempFile = CreateTempFile();
         try
         {
             var request = CreateBaseRequest(tempFile) with
@@ -226,7 +229,7 @@ public class SortRequestValidatorTests
     [Fact]
     public void Validate_MinChunkSizeExceedsMaxChunkSize_ThrowsArgumentException()
     {
-        string tempFile = CreateTempFile();
+        var tempFile = CreateTempFile();
         try
         {
             var request = CreateBaseRequest(tempFile) with
@@ -248,7 +251,7 @@ public class SortRequestValidatorTests
     [Fact]
     public void Validate_ValidRequest_DoesNotThrow()
     {
-        string tempFile = CreateTempFile();
+        var tempFile = CreateTempFile();
         try
         {
             var request = CreateBaseRequest(tempFile);
@@ -262,4 +265,3 @@ public class SortRequestValidatorTests
         }
     }
 }
-

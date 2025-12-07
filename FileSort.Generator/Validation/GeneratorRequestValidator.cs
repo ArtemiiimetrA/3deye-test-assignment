@@ -3,7 +3,7 @@ using FileSort.Core.Requests;
 namespace FileSort.Generator.Validation;
 
 /// <summary>
-/// Validates SortRequest parameters before processing.
+///     Validates SortRequest parameters before processing.
 /// </summary>
 internal static class GeneratorRequestValidator
 {
@@ -30,4 +30,3 @@ internal static class GeneratorRequestValidator
             throw new ArgumentException("BufferSizeBytes must be greater than 0.", nameof(request));
     }
 }
-

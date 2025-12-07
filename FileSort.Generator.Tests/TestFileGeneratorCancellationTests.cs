@@ -11,7 +11,7 @@ public class TestFileGeneratorCancellationTests
     [Fact]
     public async Task GenerateAsync_Cancellation_ThrowsOperationCanceledException()
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         try
         {
             var request = new GeneratorRequest
@@ -41,7 +41,7 @@ public class TestFileGeneratorCancellationTests
     [Fact]
     public async Task GenerateAsync_AlreadyCancelled_ThrowsImmediately()
     {
-        string outputPath = Path.GetTempFileName();
+        var outputPath = Path.GetTempFileName();
         try
         {
             var request = new GeneratorRequest
@@ -68,4 +68,3 @@ public class TestFileGeneratorCancellationTests
         }
     }
 }
-

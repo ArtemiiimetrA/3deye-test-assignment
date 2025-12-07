@@ -104,7 +104,7 @@ public class RecordKeyTests
         var key1 = new RecordKey(text1, 1);
         var key2 = new RecordKey(text2, 1);
 
-        int result = key1.CompareTo(key2);
+        var result = key1.CompareTo(key2);
         if (expectedSign < 0)
             Assert.True(result < 0);
         else if (expectedSign > 0)
@@ -122,4 +122,3 @@ public class RecordKeyTests
         Assert.Equal(0, key1.CompareTo(key2));
     }
 }
-

@@ -1,8 +1,8 @@
 namespace FileSort.Core.Requests;
 
 /// <summary>
-/// Data Transfer Object for file generation requests.
-/// Contains runtime parameters merged from configuration and command-line arguments.
+///     Data Transfer Object for file generation requests.
+///     Contains runtime parameters merged from configuration and command-line arguments.
 /// </summary>
 public sealed record GeneratorRequest
 {
@@ -15,4 +15,3 @@ public sealed record GeneratorRequest
     public int? Seed { get; init; }
     public int MaxWordsPerString { get; init; }
 }
-
