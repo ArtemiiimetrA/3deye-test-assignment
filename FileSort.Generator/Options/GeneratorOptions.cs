@@ -11,6 +11,7 @@ public sealed class GeneratorOptions
     public int DuplicateRatioPercent { get; init; }
     public int BufferSizeBytes { get; init; }
     public int? Seed { get; init; }
+    public int MaxWordsPerString { get; init; }
 
     public GeneratorOptions() { }
 
@@ -21,7 +22,8 @@ public sealed class GeneratorOptions
         int maxNumber,
         int duplicateRatioPercent,
         int bufferSizeBytes,
-        int? seed)
+        int? seed,
+        int maxWordsPerString)
     {
         OutputFilePath = outputFilePath;
         TargetSizeBytes = targetSizeBytes;
@@ -30,5 +32,6 @@ public sealed class GeneratorOptions
         DuplicateRatioPercent = duplicateRatioPercent;
         BufferSizeBytes = bufferSizeBytes;
         Seed = seed;
+        MaxWordsPerString = maxWordsPerString;
     }
 }

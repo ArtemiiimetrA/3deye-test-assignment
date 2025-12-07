@@ -10,6 +10,7 @@
     <ItemGroup>
         <ProjectReference Include="..\FileSort.Core\FileSort.Core.csproj" />
         <ProjectReference Include="..\FileSort.Generator\FileSort.Generator.csproj" />
+        <ProjectReference Include="..\FileSort.Progress\FileSort.Progress.csproj" />
         <ProjectReference Include="..\FileSort.Sorter\FileSort.Sorter.csproj" />
     </ItemGroup>
 

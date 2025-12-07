@@ -13,5 +13,6 @@ public sealed record GeneratorRequest
     public int DuplicateRatioPercent { get; init; }
     public int BufferSizeBytes { get; init; }
     public int? Seed { get; init; }
+    public int MaxWordsPerString { get; init; }
 }
 

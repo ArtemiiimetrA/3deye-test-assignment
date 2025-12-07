@@ -2,6 +2,7 @@ using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
 using FileSort.Core.Requests;
 using FileSort.Generator.Options;
+using FileSort.Progress.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -29,11 +30,12 @@ public static class GenerateCommand
         command.SetHandler(async (string? output, long? size, int? duplicates, int? seed) =>
         {
             using var scope = host.Services.CreateScope();
-            var baseOptions = scope.ServiceProvider.GetRequiredService<IOptionsSnapshot<GeneratorOptions>>().Value;
-            var generator = scope.ServiceProvider.GetRequiredService<ITestFileGenerator>();
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            var serviceProvider = scope.ServiceProvider;
+            var baseOptions = serviceProvider.GetRequiredService<IOptionsSnapshot<GeneratorOptions>>().Value;
+            var generator = serviceProvider.GetRequiredService<ITestFileGenerator>();
+            var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+            var progressFactory = serviceProvider.GetRequiredService<IProgressReporterFactory<GeneratorProgress>>();
 
-            // Merge configuration with command-line arguments into DTO
             var request = new GeneratorRequest
             {
                 OutputFilePath = output ?? baseOptions.OutputFilePath ?? throw new InvalidOperationException("OutputFilePath must be specified either in configuration or via --output option"),
@@ -42,24 +44,20 @@ public static class GenerateCommand
                 MaxNumber = baseOptions.MaxNumber,
                 DuplicateRatioPercent = duplicates ?? baseOptions.DuplicateRatioPercent,
                 BufferSizeBytes = baseOptions.BufferSizeBytes,
-                Seed = seed ?? baseOptions.Seed
+                Seed = seed ?? baseOptions.Seed,
+                MaxWordsPerString = baseOptions.MaxWordsPerString
             };
 
             logger.LogInformation("Generating test file: {OutputPath}, Target size: {Size} bytes", request.OutputFilePath, request.TargetSizeBytes);
 
-            var progress = new Progress<GeneratorProgress>(p =>
-            {
-                if (p.LinesWritten % 100000 == 0 || p.BytesWritten >= p.TargetBytes)
-                {
-                    double percent = (double)p.BytesWritten / p.TargetBytes * 100;
-                    logger.LogInformation("Progress: {Percent:F2}% ({BytesWritten:N0} / {TargetBytes:N0} bytes, {LinesWritten:N0} lines)",
-                        percent, p.BytesWritten, p.TargetBytes, p.LinesWritten);
-                }
-            });
+            var progress = progressFactory.CreateConsoleReporter(
+                shouldReport: p => p.LinesWritten % 100000 == 0 || p.BytesWritten >= p.TargetBytes,
+                showInline: true);
 
             try
             {
                 await generator.GenerateAsync(request, progress);
+                Console.WriteLine();
                 logger.LogInformation("File generation completed: {OutputPath}", request.OutputFilePath);
             }
             catch (Exception ex)

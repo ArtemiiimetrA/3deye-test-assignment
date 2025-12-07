@@ -4,19 +4,19 @@ public sealed class SortOptions
 {
     public const string SectionName = "SortOptions"; 
     
-    public string? InputFilePath { get; set; }
-    public string? OutputFilePath { get; set; }
-    public string? TempDirectory { get; set; }
-    public int MaxRamMb { get; set; }
-    public int ChunkSizeMb { get; set; }
-    public int MaxDegreeOfParallelism { get; set; }
-    public string? FileChunkTemplate { get; set; }
-    public int BufferSizeBytes { get; set; }
-    public bool DeleteTempFiles { get; set; }
-    public int MaxOpenFiles { get; set; }
-    public bool AdaptiveChunkSize { get; set; }
-    public int MinChunkSizeMb { get; set; }
-    public int MaxChunkSizeMb { get; set; }
+    public string? InputFilePath { get; init; }
+    public string? OutputFilePath { get; init; }
+    public string? TempDirectory { get; init; }
+    public int MaxRamMb { get; init; }
+    public int ChunkSizeMb { get; init; }
+    public int MaxDegreeOfParallelism { get; init; }
+    public string? FileChunkTemplate { get; init; }
+    public int BufferSizeBytes { get; init; }
+    public bool DeleteTempFiles { get; init; }
+    public int MaxOpenFiles { get; init; }
+    public bool AdaptiveChunkSize { get; init; }
+    public int MinChunkSizeMb { get; init; }
+    public int MaxChunkSizeMb { get; init; }
 
     // Parameterless constructor for configuration binding
     public SortOptions()

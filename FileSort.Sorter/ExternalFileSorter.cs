@@ -1,4 +1,3 @@
-using FileSort.Core.Comparison;
 using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
 using FileSort.Core.Parsing;

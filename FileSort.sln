@@ -16,6 +16,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSort.Generator.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSort.Sorter.Tests", "FileSort.Sorter.Tests\FileSort.Sorter.Tests.csproj", "{9C0D921D-0D5F-454D-8F22-D8957E8AD8CF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileSort.Progress", "FileSort.Progress\FileSort.Progress.csproj", "{1B1E739F-F20B-4100-AFE3-8F2B14C344CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +52,10 @@ Global
 		{9C0D921D-0D5F-454D-8F22-D8957E8AD8CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C0D921D-0D5F-454D-8F22-D8957E8AD8CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C0D921D-0D5F-454D-8F22-D8957E8AD8CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B1E739F-F20B-4100-AFE3-8F2B14C344CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B1E739F-F20B-4100-AFE3-8F2B14C344CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B1E739F-F20B-4100-AFE3-8F2B14C344CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B1E739F-F20B-4100-AFE3-8F2B14C344CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1176286B-DAE9-407D-A981-BA2565E9F837} = {96274BCF-CD02-4DE5-88ED-DF73F3977881}

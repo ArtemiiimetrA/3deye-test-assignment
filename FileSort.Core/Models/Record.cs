@@ -2,7 +2,6 @@ namespace FileSort.Core.Models;
 
 /// <summary>
 /// Represents a parsed record from the input file.
-/// Note: OriginalLine is not stored to save memory - line is reconstructed during output.
 /// </summary>
 public readonly struct Record : IEquatable<Record>
 {

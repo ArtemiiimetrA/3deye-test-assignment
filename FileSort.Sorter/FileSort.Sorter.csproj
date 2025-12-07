@@ -8,6 +8,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\FileSort.Core\FileSort.Core.csproj" />
+        <ProjectReference Include="..\FileSort.Progress\FileSort.Progress.csproj" />
     </ItemGroup>
 
     <ItemGroup>

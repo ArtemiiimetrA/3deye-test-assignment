@@ -1,4 +1,3 @@
-using FileSort.Core.Models;
 using FileSort.Core.Parsing;
 using Xunit;
 using Record = FileSort.Core.Models.Record;

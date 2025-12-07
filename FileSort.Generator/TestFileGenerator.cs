@@ -1,100 +1,60 @@
 using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
 using FileSort.Core.Requests;
+using System.Text;
 
 namespace FileSort.Generator;
 
+// <inheritdoc />
 public sealed class TestFileGenerator : ITestFileGenerator
 {
+    private const int WriteBufferCapacity = 10000;
+    private const double TargetSizeTolerance = 0.99;
+    private static readonly Encoding FileEncoding = Encoding.UTF8;
+    private static readonly int LineEndingBytes = FileEncoding.GetByteCount(Environment.NewLine);
+
+    // <inheritdoc />
     public async Task GenerateAsync(
         GeneratorRequest request,
         IProgress<GeneratorProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
         ValidateRequest(request);
+        EnsureOutputDirectoryExists(request.OutputFilePath);
 
-        // Ensure output directory exists
-        string? directory = Path.GetDirectoryName(request.OutputFilePath);
-        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
+        var textPool = CreateTextPool(request);
+        var random = CreateRandom(request.Seed);
 
-        var textPool = new TextPool(request.DuplicateRatioPercent, request.Seed);
-        var random = request.Seed.HasValue ? new Random(request.Seed.Value) : new Random();
+        await using var writer = CreateFileWriter(request.OutputFilePath, request.BufferSizeBytes);
 
+        var writeBuffer = new List<string>(capacity: WriteBufferCapacity);
         long bytesWritten = 0;
         long linesWritten = 0;
 
-        await using var fileStream = new FileStream(
-            request.OutputFilePath,
-            FileMode.Create,
-            FileAccess.Write,
-            FileShare.None,
-            request.BufferSizeBytes,
-            FileOptions.SequentialScan | FileOptions.Asynchronous);
+        (bytesWritten, linesWritten) = await GenerateLinesLoopAsync(
+            request,
+            textPool,
+            random,
+            writer,
+            writeBuffer,
+            bytesWritten,
+            linesWritten,
+            progress,
+            cancellationToken);
 
-        await using var writer = new StreamWriter(fileStream, System.Text.Encoding.UTF8, request.BufferSizeBytes);
+        (bytesWritten, linesWritten) = await FlushRemainingLinesAsync(
+            writeBuffer,
+            writer,
+            bytesWritten,
+            linesWritten,
+            cancellationToken);
 
-        // Write buffer for batching writes
-        var writeBuffer = new List<string>(capacity: 10000);
-
-        while (bytesWritten < request.TargetSizeBytes && !cancellationToken.IsCancellationRequested)
-        {
-            int number = random.Next(request.MinNumber, request.MaxNumber + 1);
-            string text = textPool.GetNextText();
-            string line = $"{number}. {text}";
-
-            writeBuffer.Add(line);
-
-            // Estimate bytes (UTF-8 encoding, approximate)
-            long estimatedBytes = System.Text.Encoding.UTF8.GetByteCount(line) + 2; // +2 for line ending
-
-            // Flush buffer when it's large enough or when approaching target size
-            if (writeBuffer.Count >= 10000 || bytesWritten + estimatedBytes >= request.TargetSizeBytes)
-            {
-                foreach (string bufferedLine in writeBuffer)
-                {
-                    await writer.WriteLineAsync(bufferedLine);
-                    long lineBytes = System.Text.Encoding.UTF8.GetByteCount(bufferedLine) + 2;
-                    bytesWritten += lineBytes;
-                    linesWritten++;
-                }
-                writeBuffer.Clear();
-
-                // Report progress
-                progress?.Report(new GeneratorProgress
-                {
-                    BytesWritten = bytesWritten,
-                    TargetBytes = request.TargetSizeBytes,
-                    LinesWritten = linesWritten
-                });
-
-                // Check if we've reached target (with small tolerance)
-                if (bytesWritten >= request.TargetSizeBytes * 0.99) // 99% of target
-                    break;
-            }
-        }
-
-        // Flush any remaining lines
-        if (writeBuffer.Count > 0)
-        {
-            foreach (string bufferedLine in writeBuffer)
-            {
-                await writer.WriteLineAsync(bufferedLine);
-                long lineBytes = System.Text.Encoding.UTF8.GetByteCount(bufferedLine) + 2;
-                bytesWritten += lineBytes;
-                linesWritten++;
-            }
-        }
-
-        await writer.FlushAsync();
+        await writer.FlushAsync(cancellationToken);
     }
 
     private static void ValidateRequest(GeneratorRequest request)
     {
-        if (request == null)
-            throw new ArgumentNullException(nameof(request));
+        ArgumentNullException.ThrowIfNull(request);
 
         if (string.IsNullOrWhiteSpace(request.OutputFilePath))
             throw new ArgumentException("OutputFilePath is required.", nameof(request));
@@ -113,5 +73,159 @@ public sealed class TestFileGenerator : ITestFileGenerator
 
         if (request.BufferSizeBytes <= 0)
             throw new ArgumentException("BufferSizeBytes must be greater than 0.", nameof(request));
+    }
+
+    private static void EnsureOutputDirectoryExists(string filePath)
+    {
+        string? directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+
+    private static TextPool CreateTextPool(GeneratorRequest request)
+    {
+        return new TextPool(
+            request.DuplicateRatioPercent,
+            request.MaxWordsPerString,
+            request.Seed);
+    }
+
+    private static Random CreateRandom(int? seed)
+    {
+        return seed.HasValue ? new Random(seed.Value) : new Random();
+    }
+
+    private static StreamWriter CreateFileWriter(string filePath, int bufferSize)
+    {
+        var fileStream = new FileStream(
+            filePath,
+            FileMode.Create,
+            FileAccess.Write,
+            FileShare.None,
+            bufferSize,
+            FileOptions.SequentialScan | FileOptions.Asynchronous);
+
+        return new StreamWriter(fileStream, FileEncoding, bufferSize);
+    }
+
+    private static string GenerateLine(Random random, TextPool textPool, int minNumber, int maxNumber)
+    {
+        int number = random.Next(minNumber, maxNumber + 1);
+        string text = textPool.GetNextText();
+        return $"{number}. {text}";
+    }
+
+    private static long CalculateLineBytes(string line)
+    {
+        return FileEncoding.GetByteCount(line) + LineEndingBytes;
+    }
+
+    private static bool ShouldFlushBuffer(
+        List<string> writeBuffer,
+        long currentBytes,
+        long estimatedBytes,
+        long targetBytes)
+    {
+        return writeBuffer.Count >= WriteBufferCapacity
+            || currentBytes + estimatedBytes >= targetBytes;
+    }
+
+    private static bool HasReachedTarget(long bytesWritten, long targetBytes)
+    {
+        return bytesWritten >= targetBytes * TargetSizeTolerance;
+    }
+
+    private static async Task<(long bytesWritten, long linesWritten)> GenerateLinesLoopAsync(
+        GeneratorRequest request,
+        TextPool textPool,
+        Random random,
+        StreamWriter writer,
+        List<string> writeBuffer,
+        long bytesWritten,
+        long linesWritten,
+        IProgress<GeneratorProgress>? progress,
+        CancellationToken cancellationToken)
+    {
+        while (bytesWritten < request.TargetSizeBytes && !cancellationToken.IsCancellationRequested)
+        {
+            string line = GenerateLine(random, textPool, request.MinNumber, request.MaxNumber);
+            writeBuffer.Add(line);
+
+            long estimatedBytes = CalculateLineBytes(line);
+
+            if (ShouldFlushBuffer(writeBuffer, bytesWritten, estimatedBytes, request.TargetSizeBytes))
+            {
+                (bytesWritten, linesWritten) = await FlushWriteBufferAsync(
+                    writeBuffer,
+                    writer,
+                    bytesWritten,
+                    linesWritten,
+                    cancellationToken);
+
+                ReportProgress(progress, bytesWritten, request.TargetSizeBytes, linesWritten);
+
+                if (HasReachedTarget(bytesWritten, request.TargetSizeBytes))
+                    break;
+            }
+        }
+
+        return (bytesWritten, linesWritten);
+    }
+
+    private static async Task<(long bytesWritten, long linesWritten)> FlushWriteBufferAsync(
+        List<string> writeBuffer,
+        StreamWriter writer,
+        long bytesWritten,
+        long linesWritten,
+        CancellationToken cancellationToken)
+    {
+        foreach (string line in writeBuffer)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            await writer.WriteLineAsync(line);
+            
+            long lineBytes = CalculateLineBytes(line);
+            bytesWritten += lineBytes;
+            linesWritten++;
+        }
+        writeBuffer.Clear();
+        
+        return (bytesWritten, linesWritten);
+    }
+
+    private static async Task<(long bytesWritten, long linesWritten)> FlushRemainingLinesAsync(
+        List<string> writeBuffer,
+        StreamWriter writer,
+        long bytesWritten,
+        long linesWritten,
+        CancellationToken cancellationToken)
+    {
+        if (writeBuffer.Count > 0)
+        {
+            (bytesWritten, linesWritten) = await FlushWriteBufferAsync(
+                writeBuffer,
+                writer,
+                bytesWritten,
+                linesWritten,
+                cancellationToken);
+        }
+        
+        return (bytesWritten, linesWritten);
+    }
+
+    private static void ReportProgress(
+        IProgress<GeneratorProgress>? progress,
+        long bytesWritten,
+        long targetBytes,
+        long linesWritten)
+    {
+        progress?.Report(new GeneratorProgress
+        {
+            BytesWritten = bytesWritten,
+            TargetBytes = targetBytes,
+            LinesWritten = linesWritten
+        });
     }
 }

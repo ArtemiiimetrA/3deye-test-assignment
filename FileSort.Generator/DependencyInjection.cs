@@ -1,5 +1,9 @@
 using FileSort.Core.Interfaces;
+using FileSort.Core.Models;
+using FileSort.Generator.Helpers;
 using FileSort.Generator.Options;
+using FileSort.Progress.Helpers;
+using FileSort.Progress.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +19,9 @@ public static class DependencyInjection
             .AddOptions<GeneratorOptions>()
             .Bind(configuration.GetSection(GeneratorOptions.SectionName));
         services.AddSingleton<ITestFileGenerator, TestFileGenerator>();
+
+        services.AddSingleton<IProgressReporterFactory<GeneratorProgress>>(_ =>
+            new ProgressReporterFactoryService<GeneratorProgress>(GeneratorProgressFormatter.Format));
 
         return services;
     }

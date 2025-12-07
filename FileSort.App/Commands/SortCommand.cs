@@ -1,6 +1,7 @@
 using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
 using FileSort.Core.Requests;
+using FileSort.Progress.Interfaces;
 using FileSort.Sorter.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,11 +28,12 @@ public static class SortCommand
         command.SetHandler(async (string? input, string? output, int? chunkSize) =>
         {
             using var scope = host.Services.CreateScope();
-            var baseOptions = scope.ServiceProvider.GetRequiredService<IOptionsSnapshot<SortOptions>>().Value;
-            var sorter = scope.ServiceProvider.GetRequiredService<IExternalSorter>();
-            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            var serviceProvider = scope.ServiceProvider;
+            var baseOptions = serviceProvider.GetRequiredService<IOptionsSnapshot<SortOptions>>().Value;
+            var sorter = serviceProvider.GetRequiredService<IExternalSorter>();
+            var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+            var progressFactory = serviceProvider.GetRequiredService<IProgressReporterFactory<SortProgress>>();
 
-            // Merge configuration with command-line arguments into DTO
             var request = new SortRequest
             {
                 InputFilePath = input ?? baseOptions.InputFilePath ?? throw new InvalidOperationException("InputFilePath must be specified either in configuration or via --input option"),
@@ -51,15 +53,9 @@ public static class SortCommand
 
             logger.LogInformation("Sorting file: {InputPath} -> {OutputPath}", request.InputFilePath, request.OutputFilePath);
 
-            var progress = new Progress<SortProgress>(p =>
-            {
-                if (p.ChunksCreated > 0 || p.ChunksMerged > 0)
-                {
-                    double percent = p.TotalBytes > 0 ? (double)p.BytesProcessed / p.TotalBytes * 100 : 0;
-                    logger.LogInformation("Progress: {Percent:F2}% - Chunks: {ChunksCreated} created, {ChunksMerged} merged, Pass {CurrentPass}/{TotalPasses}",
-                        percent, p.ChunksCreated, p.ChunksMerged, p.CurrentMergePass, p.TotalMergePasses);
-                }
-            });
+            var progress = progressFactory.CreateConsoleReporter(
+                shouldReport: p => p.ChunksCreated > 0 || p.ChunksMerged > 0 || p.CurrentMergePass > 0,
+                showInline: true);
 
             try
             {
