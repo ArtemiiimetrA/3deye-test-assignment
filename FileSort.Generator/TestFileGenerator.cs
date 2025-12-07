@@ -2,6 +2,7 @@ using FileSort.Core.Interfaces;
 using FileSort.Core.Models;
 using FileSort.Core.Requests;
 using System.Text;
+using FileSort.Generator.Validation;
 
 namespace FileSort.Generator;
 
@@ -19,7 +20,7 @@ public sealed class TestFileGenerator : ITestFileGenerator
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        ValidateRequest(request);
+        GeneratorRequestValidator.Validate(request);
         EnsureOutputDirectoryExists(request.OutputFilePath);
 
         var textPool = CreateTextPool(request);
@@ -61,29 +62,6 @@ public sealed class TestFileGenerator : ITestFileGenerator
         }
     }
 
-    private static void ValidateRequest(GeneratorRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        if (string.IsNullOrWhiteSpace(request.OutputFilePath))
-            throw new ArgumentException("OutputFilePath is required.", nameof(request));
-
-        if (request.TargetSizeBytes <= 0)
-            throw new ArgumentException("TargetSizeBytes must be greater than 0.", nameof(request));
-
-        if (request.MinNumber < 0)
-            throw new ArgumentException("MinNumber must be non-negative.", nameof(request));
-
-        if (request.MaxNumber < request.MinNumber)
-            throw new ArgumentException("MaxNumber must be greater than or equal to MinNumber.", nameof(request));
-
-        if (request.DuplicateRatioPercent < 0 || request.DuplicateRatioPercent > 100)
-            throw new ArgumentException("DuplicateRatioPercent must be between 0 and 100.", nameof(request));
-
-        if (request.BufferSizeBytes <= 0)
-            throw new ArgumentException("BufferSizeBytes must be greater than 0.", nameof(request));
-    }
-
     private static void EnsureOutputDirectoryExists(string filePath)
     {
         string? directory = Path.GetDirectoryName(filePath);
@@ -93,9 +71,9 @@ public sealed class TestFileGenerator : ITestFileGenerator
         }
     }
 
-    private static TextPool CreateTextPool(GeneratorRequest request)
+    private static TextPool.TextPool CreateTextPool(GeneratorRequest request)
     {
-        return new TextPool(
+        return new TextPool.TextPool(
             request.DuplicateRatioPercent,
             request.MaxWordsPerString,
             request.Seed);
@@ -119,7 +97,7 @@ public sealed class TestFileGenerator : ITestFileGenerator
         return new StreamWriter(fileStream, FileEncoding, bufferSize);
     }
 
-    private static string GenerateLine(Random random, TextPool textPool, int minNumber, int maxNumber)
+    private static string GenerateLine(Random random, TextPool.TextPool textPool, int minNumber, int maxNumber)
     {
         int number = random.Next(minNumber, maxNumber + 1);
         string text = textPool.GetNextText();
@@ -148,7 +126,7 @@ public sealed class TestFileGenerator : ITestFileGenerator
 
     private static async Task<(long bytesWritten, long linesWritten)> GenerateLinesLoopAsync(
         GeneratorRequest request,
-        TextPool textPool,
+        TextPool.TextPool textPool,
         Random random,
         StreamWriter writer,
         List<string> writeBuffer,

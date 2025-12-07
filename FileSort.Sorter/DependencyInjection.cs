@@ -23,7 +23,6 @@ public static class DependencyInjection
 
         services.AddSingleton<IExternalSorter, ExternalFileSorter>();
 
-        // Register progress reporter factory for sort operations
         services.AddSingleton<IProgressReporterFactory<SortProgress>>(_ =>
             new ProgressReporterFactoryService<SortProgress>(SortProgressFormatter.Format));
 

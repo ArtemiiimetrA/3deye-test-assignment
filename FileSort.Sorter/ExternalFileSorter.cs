@@ -38,7 +38,6 @@ public sealed class ExternalFileSorter : IExternalSorter
         }
         finally
         {
-            // Cleanup: Delete temporary chunk files
             CleanupTempFiles(chunkFiles, request.DeleteTempFiles);
         }
     }

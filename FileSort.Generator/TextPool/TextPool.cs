@@ -1,4 +1,4 @@
-namespace FileSort.Generator;
+namespace FileSort.Generator.TextPool;
 
 /// <summary>
 /// Manages a pool of base strings and generates variations for test file generation.

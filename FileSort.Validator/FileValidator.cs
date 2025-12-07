@@ -16,6 +16,7 @@ public class FileValidator : IFileValidator
     private const int DefaultBufferSize = 8192;
     private static readonly RecordComparer Comparer = RecordComparer.Instance;
 
+    // <inheritdoc />
     public async Task<ValidationResult> ValidateAsync(string filePath, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(filePath))

@@ -8,6 +8,8 @@ namespace FileSort.App.Commands;
 
 public static class ValidateCommand
 {
+    private const int ErrorsCount = 1;
+
     public static Command Create(IHost host)
     {
         var command = new Command("validate", "Validate that a sorted file is properly sorted");
@@ -42,8 +44,8 @@ public static class ValidateCommand
                     Console.WriteLine($"✗ File is invalid. Found {result.InvalidRecords:N0} invalid record(s) out of {result.TotalRecords:N0} total records.");
                     logger.LogWarning("Validation failed. Invalid records: {InvalidRecords}/{TotalRecords}", result.InvalidRecords, result.TotalRecords);
 
-                    // Show first 10 errors
-                    var errorsToShow = result.Errors.Take(10).ToList();
+                    // Show first {ErrorsCount} errors
+                    var errorsToShow = result.Errors.Take(ErrorsCount).ToList();
                     Console.WriteLine("\nFirst {0} error(s):", errorsToShow.Count);
                     foreach (var error in errorsToShow)
                     {
@@ -51,9 +53,9 @@ public static class ValidateCommand
                         Console.WriteLine($"    Content: {error.Line}");
                     }
 
-                    if (result.Errors.Count > 10)
+                    if (result.Errors.Count > ErrorsCount)
                     {
-                        Console.WriteLine($"  ... and {result.Errors.Count - 10} more error(s)");
+                        Console.WriteLine($"  ... and {result.Errors.Count - ErrorsCount} more error(s)");
                     }
 
                     Environment.Exit(1);
