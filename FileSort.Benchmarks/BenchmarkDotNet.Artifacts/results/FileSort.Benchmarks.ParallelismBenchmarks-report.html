@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>FileSort.Benchmarks.ParallelismBenchmarks-20251208-031914</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; text-align: right; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet v0.13.12, Windows 11 (10.0.26100.7171)
+Intel Core i9-14900HX, 1 CPU, 32 logical and 24 physical cores
+.NET SDK 9.0.304
+  [Host]   : .NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2
+  .NET 9.0 : .NET 9.0.8 (9.0.825.36511), X64 RyuJIT AVX2
+</code></pre>
+<pre><code>Job=.NET 9.0  Runtime=.NET 9.0  
+</code></pre>
+
+<table>
+<thead><tr><th>Method            </th><th>maxDegreeOfParallelism</th><th>maxMergeParallelism</th><th>Mean</th><th>Error</th><th>StdDev</th><th>Gen0 </th><th>Gen1</th><th>Gen2</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>SortWithBothParallelism</td><td>1</td><td>1</td><td>3.235 s</td><td>0.0645 s</td><td>0.0792 s</td><td>115000.0000</td><td>35000.0000</td><td>9000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithChunkParallelism</td><td>1</td><td>?</td><td>3.337 s</td><td>0.0667 s</td><td>0.0655 s</td><td>112000.0000</td><td>33000.0000</td><td>7000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithMergeParallelism</td><td>?</td><td>1</td><td>3.325 s</td><td>0.0658 s</td><td>0.1512 s</td><td>113000.0000</td><td>34000.0000</td><td>8000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithBothParallelism</td><td>2</td><td>2</td><td>3.257 s</td><td>0.0643 s</td><td>0.0631 s</td><td>112000.0000</td><td>33000.0000</td><td>7000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithChunkParallelism</td><td>2</td><td>?</td><td>3.232 s</td><td>0.0434 s</td><td>0.0406 s</td><td>112000.0000</td><td>33000.0000</td><td>7000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithMergeParallelism</td><td>?</td><td>2</td><td>3.226 s</td><td>0.0573 s</td><td>0.0536 s</td><td>112000.0000</td><td>33000.0000</td><td>7000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithBothParallelism</td><td>4</td><td>2</td><td>3.200 s</td><td>0.0182 s</td><td>0.0152 s</td><td>112000.0000</td><td>34000.0000</td><td>7000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithChunkParallelism</td><td>4</td><td>?</td><td>3.298 s</td><td>0.0617 s</td><td>0.0606 s</td><td>112000.0000</td><td>33000.0000</td><td>7000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithMergeParallelism</td><td>?</td><td>4</td><td>3.182 s</td><td>0.0310 s</td><td>0.0259 s</td><td>114000.0000</td><td>35000.0000</td><td>9000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithBothParallelism</td><td>8</td><td>4</td><td>3.164 s</td><td>0.0498 s</td><td>0.0465 s</td><td>112000.0000</td><td>33000.0000</td><td>7000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithChunkParallelism</td><td>8</td><td>?</td><td>3.158 s</td><td>0.0552 s</td><td>0.0516 s</td><td>114000.0000</td><td>35000.0000</td><td>9000.0000</td><td>2.14 GB</td>
+</tr><tr><td>SortWithMergeParallelism</td><td>?</td><td>8</td><td>3.212 s</td><td>0.0470 s</td><td>0.0439 s</td><td>112000.0000</td><td>33000.0000</td><td>7000.0000</td><td>2.14 GB</td>
+</tr></tbody></table>
+</body>
+</html>

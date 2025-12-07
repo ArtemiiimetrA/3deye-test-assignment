@@ -103,6 +103,8 @@ Configuration settings for the file sorting operation.
 
 - **MaxOpenFiles** (int): Maximum number of file handles that can be open simultaneously during the merge phase. This limits the number of chunks that can be merged in a single pass.
 
+- **MaxMergeParallelism** (int): Maximum number of concurrent merge operations during the merge phase. Controls how many merge operations can be performed in parallel, which affects CPU and I/O utilization during the merge process.
+
 - **AdaptiveChunkSize** (bool): Enables adaptive chunk sizing based on memory pressure. When enabled, chunk sizes will vary between `MinChunkSizeMb` and `MaxChunkSizeMb` based on available memory and data characteristics.
 
 - **MinChunkSizeMb** (int): Minimum chunk size (in megabytes) when using adaptive chunk sizing. Used only when `AdaptiveChunkSize` is `true`.
@@ -124,6 +126,8 @@ Configuration settings for generating test files.
 - **DuplicateRatioPercent** (int): Percentage (0-100) of records that should be duplicates. Higher values will result in more repeated text values in the generated file.
 
 - **BufferSizeBytes** (int): Size of the I/O buffer (in bytes) used for writing the generated file. Larger buffers can improve write performance.
+
+- **MaxWordsPerString** (int): Maximum number of words in the text part of generated records. Controls the length of the text portion of each record.
 
 - **Seed** (int?, optional): Random seed value for generating reproducible test files. If not specified or set to `null`, a random seed will be used, resulting in different output each time.
 
