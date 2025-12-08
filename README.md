@@ -93,6 +93,77 @@ The merge phase uses one of two strategies based on the number of chunks:
 - **Single-Pass Merge**: Used when the number of chunks ≤ `Merge.MaxOpenFiles` (all chunks can be opened simultaneously)
 - **Multi-Pass Merge**: Used when the number of chunks > `Merge.MaxOpenFiles` (requires cascading merge passes)
 
+### Merge Algorithms
+
+#### Single-Pass Merge Algorithm
+
+The Single-Pass Merge strategy performs a k-way merge of all sorted chunk files in a single pass. This algorithm is used when the number of chunks does not exceed the `MaxOpenFiles` limit.
+
+**Algorithm Steps:**
+
+1. **Initialization**: Open all chunk files simultaneously, creating a stream reader for each file.
+
+2. **Priority Queue Setup**: Read the first record from each chunk file and insert them into a min-heap priority queue. Each queue entry contains:
+   - The record itself
+   - The source file index (to track which file the record came from)
+   - The record's sort key (used for comparison)
+
+3. **Merge Loop**: While the priority queue is not empty:
+   - Dequeue the record with the smallest key (top of the min-heap)
+   - Write the record to the output file (using buffered writes for performance)
+   - Read the next record from the source file that provided the dequeued record
+   - If a record was successfully read, enqueue it into the priority queue
+   - If the source file is exhausted (end of file), close that file handle
+
+4. **Completion**: Once all files are exhausted and the priority queue is empty, flush any remaining buffered writes and close the output file.
+
+**Time Complexity**: O(N log k) where N is the total number of records and k is the number of chunks.
+
+**Space Complexity**: O(k) for the priority queue and file handles.
+
+**Advantages**:
+- Single pass through all data
+- Optimal for scenarios where all chunks can fit within file handle limits
+- Minimal I/O operations
+
+#### Multi-Pass Merge Algorithm
+
+The Multi-Pass Merge strategy uses a cascading merge approach when the number of chunks exceeds the `MaxOpenFiles` limit. This algorithm divides chunks into batches and merges them in multiple passes.
+
+**Algorithm Steps:**
+
+1. **Pass Initialization**: Start with the initial set of sorted chunk files.
+
+2. **Batch Processing** (for each pass):
+   - Calculate batch size: `batchSize = MaxOpenFiles - 1` (reserving 1 file handle for output)
+   - Divide current files into batches of size `batchSize`
+   - For each batch:
+     - If batch contains only 1 file, copy it directly to an intermediate file
+     - If batch contains multiple files, merge them using the Single-Pass Merge algorithm into an intermediate file
+     - Process batches in parallel (up to `MaxMergeParallelism` concurrent batches) if parallelism is enabled
+   - Clean up files from the previous pass (except initial chunks)
+
+3. **Pass Iteration**: Use the intermediate files from the current pass as input for the next pass. Repeat until only one file remains.
+
+4. **Final Output**: Copy the remaining single file to the final output path.
+
+**Example with 20 chunks and MaxOpenFiles = 5:**
+- **Pass 1**: 20 chunks → 5 batches (4 chunks each) → 5 intermediate files
+- **Pass 2**: 5 intermediate files → 1 batch (4 files) + 1 single file → 2 intermediate files
+- **Pass 3**: 2 intermediate files → 1 batch (2 files) → 1 final file → output
+
+**Time Complexity**: O(N log N) in the worst case, but typically better due to parallel batch processing.
+
+**Space Complexity**: O(MaxOpenFiles) for file handles per batch.
+
+**Advantages**:
+- Handles any number of chunks regardless of file handle limits
+- Supports parallel batch processing for improved performance
+- Efficiently manages memory by processing in batches
+- Automatically cleans up intermediate files between passes
+
+### Configuration
+
 Configuration is organized into nested sections for better structure:
 
 ```json
