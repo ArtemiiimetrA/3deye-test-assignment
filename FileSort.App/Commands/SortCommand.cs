@@ -36,27 +36,27 @@ public static class SortCommand
 
             var request = new SortRequest
             {
-                InputFilePath = input ?? baseOptions.InputFilePath ??
+                InputFilePath = input ?? baseOptions.Files.InputFilePath ??
                     throw new InvalidOperationException(
                         "InputFilePath must be specified either in configuration or via --input option"),
-                OutputFilePath = output ?? baseOptions.OutputFilePath ??
+                OutputFilePath = output ?? baseOptions.Files.OutputFilePath ??
                     throw new InvalidOperationException(
                         "OutputFilePath must be specified either in configuration or via --output option"),
-                TempDirectory = baseOptions.TempDirectory ??
+                TempDirectory = baseOptions.Files.TempDirectory ??
                                 throw new InvalidOperationException("TempDirectory must be specified in configuration"),
-                MaxRamMb = baseOptions.MaxRamMb,
-                ChunkSizeMb = chunkSize ?? baseOptions.ChunkSizeMb,
-                MaxDegreeOfParallelism = baseOptions.MaxDegreeOfParallelism,
-                FileChunkTemplate = baseOptions.FileChunkTemplate ??
+                MaxRamMb = baseOptions.ChunkCreation.MaxRamMb,
+                ChunkSizeMb = chunkSize ?? baseOptions.ChunkCreation.ChunkSizeMb,
+                MaxDegreeOfParallelism = baseOptions.ChunkCreation.MaxDegreeOfParallelism,
+                FileChunkTemplate = baseOptions.ChunkCreation.FileChunkTemplate ??
                                     throw new InvalidOperationException(
                                         "FileChunkTemplate must be specified in configuration"),
-                BufferSizeBytes = baseOptions.BufferSizeBytes,
-                DeleteTempFiles = baseOptions.DeleteTempFiles,
-                MaxOpenFiles = baseOptions.MaxOpenFiles,
-                MaxMergeParallelism = baseOptions.MaxMergeParallelism,
-                AdaptiveChunkSize = baseOptions.AdaptiveChunkSize,
-                MinChunkSizeMb = baseOptions.MinChunkSizeMb,
-                MaxChunkSizeMb = baseOptions.MaxChunkSizeMb
+                BufferSizeBytes = baseOptions.Merge.BufferSizeBytes,
+                DeleteTempFiles = baseOptions.Files.DeleteTempFiles,
+                MaxOpenFiles = baseOptions.Merge.MaxOpenFiles,
+                MaxMergeParallelism = baseOptions.Merge.MaxMergeParallelism,
+                AdaptiveChunkSize = baseOptions.ChunkCreation.Adaptive.Enabled,
+                MinChunkSizeMb = baseOptions.ChunkCreation.Adaptive.MinChunkSizeMb,
+                MaxChunkSizeMb = baseOptions.ChunkCreation.Adaptive.MaxChunkSizeMb
             };
 
             logger.LogInformation("Sorting file: {InputPath} -> {OutputPath}", request.InputFilePath,

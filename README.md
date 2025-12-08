@@ -8,6 +8,8 @@
 
 3. Multiple consecutive whitespaces in the text part will be normalized to single spaces. The string will be normalized by collapsing all whitespace sequences (spaces, tabs, etc.) into single spaces.
 
+4. If invalid string appears in input file the whole application stops.
+
 ## CLI Usage
 
 The application provides two main commands: `generate` for creating test files and `sort` for sorting files. Command-line options override values from `appsettings.json`.
@@ -83,11 +85,41 @@ dotnet run -- sort --input large_file.txt --output sorted.txt --chunk-size 100
 
 Configuration settings for the file sorting operation.
 
+The sorting process consists of two main phases:
+1. **Chunk Creation**: Input file is divided into sorted chunks
+2. **Merge Phase**: Chunks are merged into the final sorted output
+
+The merge phase uses one of two strategies based on the number of chunks:
+- **Single-Pass Merge**: Used when the number of chunks ≤ `Merge.MaxOpenFiles` (all chunks can be opened simultaneously)
+- **Multi-Pass Merge**: Used when the number of chunks > `Merge.MaxOpenFiles` (requires cascading merge passes)
+
+Configuration is organized into nested sections for better structure:
+
+```json
+{
+  "SortOptions": {
+    "Files": { ... },
+    "ChunkCreation": { ... },
+    "Merge": { ... }
+  }
+}
+```
+
+#### Files
+
+Options for file paths and temporary file management.
+
 - **InputFilePath** (string): Path to the input file that will be sorted. The file should contain records in the format `{Number}. {Text}`.
 
 - **OutputFilePath** (string): Path where the sorted output file will be written.
 
 - **TempDirectory** (string): Directory path where temporary chunk files will be created during the sorting process. The directory will be created if it doesn't exist.
+
+- **DeleteTempFiles** (bool): Whether to automatically delete temporary chunk files after the sorting operation completes. Set to `false` to keep chunk files for debugging or inspection. Default: `true`.
+
+#### ChunkCreation
+
+Options used during the chunk creation phase.
 
 - **MaxRamMb** (int): Maximum amount of RAM (in megabytes) that the sorting process should use. This helps control memory consumption and prevents out-of-memory errors when processing large files.
 
@@ -97,19 +129,55 @@ Configuration settings for the file sorting operation.
 
 - **FileChunkTemplate** (string): Template string for naming temporary chunk files. Uses string formatting with `{0}` as the chunk index placeholder (e.g., `"chunk_{0:0000}.tmp"`).
 
+- **Adaptive** (object): Options for adaptive chunk sizing.
+  - **Enabled** (bool): Enables adaptive chunk sizing based on memory pressure. When enabled, chunk sizes will vary between `MinChunkSizeMb` and `MaxChunkSizeMb` based on available memory and data characteristics.
+  - **MinChunkSizeMb** (int): Minimum chunk size (in megabytes) when using adaptive chunk sizing. Used only when `Enabled` is `true`.
+  - **MaxChunkSizeMb** (int): Maximum chunk size (in megabytes) when using adaptive chunk sizing. Used only when `Enabled` is `true`.
+
+#### Merge
+
+Options used during the merge phase.
+
 - **BufferSizeBytes** (int): Size of the I/O buffer (in bytes) used for reading and writing files. Larger buffers can improve I/O performance for sequential operations.
+  - Used in: **Both Single-Pass and Multi-Pass merge strategies**
 
-- **DeleteTempFiles** (bool): Whether to automatically delete temporary chunk files after the sorting operation completes. Set to `false` to keep chunk files for debugging or inspection.
+- **MaxOpenFiles** (int): Maximum number of file handles that can be open simultaneously during the merge phase. This determines which merge strategy is used:
+  - If number of chunks ≤ `MaxOpenFiles`: **Single-Pass Merge** is used (all chunks merged in one pass)
+  - If number of chunks > `MaxOpenFiles`: **Multi-Pass Merge** is used (chunks merged in cascading passes)
+  - Used in: **Multi-Pass merge strategy only** (determines batch size and number of passes)
 
-- **MaxOpenFiles** (int): Maximum number of file handles that can be open simultaneously during the merge phase. This limits the number of chunks that can be merged in a single pass.
+- **MaxMergeParallelism** (int): Maximum number of concurrent merge operations during the merge phase. Controls how many merge batches can be processed in parallel, which affects CPU and I/O utilization during the merge process. Default: `1`.
+  - Used in: **Multi-Pass merge strategy only** (enables parallel batch processing)
 
-- **MaxMergeParallelism** (int): Maximum number of concurrent merge operations during the merge phase. Controls how many merge operations can be performed in parallel, which affects CPU and I/O utilization during the merge process.
-
-- **AdaptiveChunkSize** (bool): Enables adaptive chunk sizing based on memory pressure. When enabled, chunk sizes will vary between `MinChunkSizeMb` and `MaxChunkSizeMb` based on available memory and data characteristics.
-
-- **MinChunkSizeMb** (int): Minimum chunk size (in megabytes) when using adaptive chunk sizing. Used only when `AdaptiveChunkSize` is `true`.
-
-- **MaxChunkSizeMb** (int): Maximum chunk size (in megabytes) when using adaptive chunk sizing. Used only when `AdaptiveChunkSize` is `true`.
+**Example configuration:**
+```json
+{
+  "SortOptions": {
+    "Files": {
+      "InputFilePath": "input.txt",
+      "OutputFilePath": "sorted.txt",
+      "TempDirectory": "temp",
+      "DeleteTempFiles": true
+    },
+    "ChunkCreation": {
+      "MaxRamMb": 50,
+      "ChunkSizeMb": 20,
+      "MaxDegreeOfParallelism": 4,
+      "FileChunkTemplate": "chunk_{0:0000}.tmp",
+      "Adaptive": {
+        "Enabled": true,
+        "MinChunkSizeMb": 1,
+        "MaxChunkSizeMb": 30
+      }
+    },
+    "Merge": {
+      "BufferSizeBytes": 524288,
+      "MaxOpenFiles": 5,
+      "MaxMergeParallelism": 2
+    }
+  }
+}
+```
 
 ### GeneratorOptions
 

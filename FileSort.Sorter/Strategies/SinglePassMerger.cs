@@ -1,3 +1,4 @@
+using System.IO;
 using FileSort.Core.Models;
 using FileSort.Core.Models.Progress;
 using FileSort.Core.Parsing;
@@ -38,6 +39,7 @@ internal sealed class SinglePassMerger : IMergeStrategy
                 readers,
                 priorityQueue,
                 writer,
+                filePaths,
                 progress,
                 cancellationToken);
         }
@@ -60,14 +62,15 @@ internal sealed class SinglePassMerger : IMergeStrategy
             var reader = FileIOHelpers.CreateFileReader(filePaths[i], _bufferSize);
             readers[i] = reader;
 
-            await TryReadAndEnqueueRecordAsync(reader, i, priorityQueue, cancellationToken);
+            await TryReadAndEnqueueRecordAsync(reader, i, filePaths[i], priorityQueue, cancellationToken);
         }
     }
 
-    private static async Task MergeRecordsAsync(
+    private async Task MergeRecordsAsync(
         StreamReader?[] readers,
         PriorityQueue<RecordWithSource, RecordKey> priorityQueue,
         StreamWriter writer,
+        IReadOnlyList<string> filePaths,
         IProgress<SortProgress>? progress,
         CancellationToken cancellationToken)
     {
@@ -82,7 +85,7 @@ internal sealed class SinglePassMerger : IMergeStrategy
             writeBuffer.Add(record.ToLine());
             recordsWritten++;
 
-            await TryReadNextRecordAsync(readers, sourceIndex, priorityQueue, cancellationToken);
+            await TryReadNextRecordAsync(readers, sourceIndex, filePaths[sourceIndex], priorityQueue, cancellationToken);
 
             if (WriteBufferHelpers.ShouldFlushBuffer(writeBuffer))
                 await WriteBufferHelpers.FlushWriteBufferAsync(writeBuffer, writer);
@@ -97,19 +100,21 @@ internal sealed class SinglePassMerger : IMergeStrategy
     private static async Task TryReadNextRecordAsync(
         StreamReader?[] readers,
         int sourceIndex,
+        string filePath,
         PriorityQueue<RecordWithSource, RecordKey> priorityQueue,
         CancellationToken cancellationToken)
     {
         var reader = readers[sourceIndex];
         if (reader == null) return;
 
-        var success = await TryReadAndEnqueueRecordAsync(reader, sourceIndex, priorityQueue, cancellationToken);
+        var success = await TryReadAndEnqueueRecordAsync(reader, sourceIndex, filePath, priorityQueue, cancellationToken);
         if (!success) CloseReader(readers, sourceIndex);
     }
 
     private static async Task<bool> TryReadAndEnqueueRecordAsync(
         StreamReader reader,
         int fileIndex,
+        string filePath,
         PriorityQueue<RecordWithSource, RecordKey> priorityQueue,
         CancellationToken cancellationToken)
     {
@@ -124,14 +129,21 @@ internal sealed class SinglePassMerger : IMergeStrategy
             line = null; // Unreachable, but satisfies compiler
         }
 
-        if (line != null && RecordParser.TryParse(line, out var record))
+        // Normal end of file - return false to indicate file is exhausted
+        if (line == null)
+            return false;
+
+        // Try to parse the line
+        if (!RecordParser.TryParse(line, out var record))
         {
-            var key = new RecordKey(record.Text, record.Number);
-            priorityQueue.Enqueue(new RecordWithSource(record, fileIndex), key);
-            return true;
+            throw new InvalidDataException(
+                $"Invalid record format in file '{filePath}'. " +
+                $"Expected format: '{{Number}}. {{Text}}', but got: '{line}'");
         }
 
-        return false;
+        var key = new RecordKey(record.Text, record.Number);
+        priorityQueue.Enqueue(new RecordWithSource(record, fileIndex), key);
+        return true;
     }
 
     private static void CloseReader(StreamReader?[] readers, int index)

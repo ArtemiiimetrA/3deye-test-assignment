@@ -1,3 +1,4 @@
+using System.IO;
 using FileSort.Sorter.Strategies;
 using Xunit;
 
@@ -127,6 +128,58 @@ public class MergeStrategyTests
             var merger = new SinglePassMerger(4096);
             await Assert.ThrowsAsync<OperationCanceledException>(
                 () => merger.MergeAsync(new[] { file1, file2 }, outputPath, null, cts.Token));
+        }
+        finally
+        {
+            Cleanup(file1, file2, outputPath);
+        }
+    }
+
+    [Fact]
+    public async Task SinglePassMerger_InvalidRecordFormat_ThrowsInvalidDataException()
+    {
+        var file1 = await CreateSortedFileAsync("file1.txt", new[] { "1. Apple" });
+        var file2 = await CreateSortedFileAsync("file2.txt", new[] { "Invalid line" });
+        var outputPath = Path.GetTempFileName();
+
+        try
+        {
+            var merger = new SinglePassMerger(4096);
+            var exception = await Assert.ThrowsAsync<InvalidDataException>(
+                () => merger.MergeAsync(new[] { file1, file2 }, outputPath, null, CancellationToken.None));
+
+            Assert.Contains("Invalid record format", exception.Message);
+            Assert.Contains(file2, exception.Message);
+        }
+        finally
+        {
+            Cleanup(file1, file2, outputPath);
+        }
+    }
+
+    [Fact]
+    public async Task SinglePassMerger_InvalidRecordDuringMerge_ThrowsInvalidDataException()
+    {
+        var file1 = await CreateSortedFileAsync("file1.txt", new[]
+        {
+            "1. Apple",
+            "3. Cherry"
+        });
+        var file2 = await CreateSortedFileAsync("file2.txt", new[]
+        {
+            "2. Banana",
+            "Invalid line"
+        });
+        var outputPath = Path.GetTempFileName();
+
+        try
+        {
+            var merger = new SinglePassMerger(4096);
+            var exception = await Assert.ThrowsAsync<InvalidDataException>(
+                () => merger.MergeAsync(new[] { file1, file2 }, outputPath, null, CancellationToken.None));
+
+            Assert.Contains("Invalid record format", exception.Message);
+            Assert.Contains(file2, exception.Message);
         }
         finally
         {
